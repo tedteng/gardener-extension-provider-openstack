@@ -17,7 +17,9 @@
 package client
 
 import (
+	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/floatingips"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/servergroups"
+	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 )
 
 const (
@@ -73,4 +75,66 @@ func (c *ComputeClient) ListServerGroups() ([]servergroups.ServerGroup, error) {
 	}
 
 	return servergroups.ExtractServerGroups(pages)
+}
+
+// CreateServer retrieves the Create of Compute service.
+func (c *ComputeClient) CreateServer(createOpts servers.CreateOpts) (*servers.Server, error) {
+	server, err := servers.Create(c.client, createOpts).Extract()
+	if err != nil {
+		return nil, err
+	}
+
+	return server, nil
+}
+
+// DeleteServer delete the Compute service.
+func (c *ComputeClient) DeleteServer(id string) error {
+	err := servers.Delete(c.client, id).ExtractErr()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// FindServersByName retrieves the Compute Server by Name
+func (c *ComputeClient) FindServersByName(name string) ([]servers.Server, error) {
+	listOpts := servers.ListOpts{
+		Name: name,
+	}
+	allPages, err := servers.List(c.client, listOpts).AllPages()
+	if err != nil {
+		return nil, err
+	}
+
+	allServers, err := servers.ExtractServers(allPages)
+	if err != nil {
+		return nil, err
+	}
+	return allServers, nil
+}
+
+// AssociateFIPWithInstance associate floating ip with instance
+func (c *ComputeClient) AssociateFIPWithInstance(serverID string, associateOpts floatingips.AssociateOpts) error {
+	return floatingips.AssociateInstance(c.client, serverID, associateOpts).ExtractErr()
+}
+
+// FindFloatingIDbyInstnaceID find floating id by instance id
+func (c *ComputeClient) FindFloatingIDbyInstnaceID(id string) (string, error) {
+	allPages, err := floatingips.List(c.client).AllPages()
+	if err != nil {
+		return "", err
+	}
+
+	allFloatingIPs, err := floatingips.ExtractFloatingIPs(allPages)
+	if err != nil {
+		return "", err
+	}
+
+	for _, fip := range allFloatingIPs {
+		if fip.InstanceID == id {
+			return fip.ID, nil
+		}
+	}
+	return "", nil
 }

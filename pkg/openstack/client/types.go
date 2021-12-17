@@ -20,7 +20,13 @@ import (
 
 	"github.com/gardener/gardener-extension-provider-openstack/pkg/openstack"
 	"github.com/gophercloud/gophercloud"
+	computerfip "github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/floatingips"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/servergroups"
+	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/floatingips"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/rules"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
 )
 
 // OpenstackClientFactory implements a factory that can construct clients for Openstack services.
@@ -71,7 +77,13 @@ type Compute interface {
 	CreateServerGroup(name, policy string) (*servergroups.ServerGroup, error)
 	GetServerGroup(id string) (*servergroups.ServerGroup, error)
 	DeleteServerGroup(id string) error
+	// Server
+	CreateServer(createOpts servers.CreateOpts) (*servers.Server, error)
+	DeleteServer(id string) error
 	ListServerGroups() ([]servergroups.ServerGroup, error)
+	FindServersByName(name string) ([]servers.Server, error)
+	AssociateFIPWithInstance(serverID string, associateOpts computerfip.AssociateOpts) error
+	FindFloatingIDbyInstnaceID(id string) (string, error)
 }
 
 // DNS describes the operations of a client interacting with OpenStack's DNS service.
@@ -83,7 +95,23 @@ type DNS interface {
 
 // Networking describes the operations of a client interacting with OpenStack's Networking service.
 type Networking interface {
+	// External Network
 	GetExternalNetworkNames(ctx context.Context) ([]string, error)
+	ListNetwork(listOpts networks.ListOpts) ([]networks.Network, error)
+	GetNetworkByName(name string) ([]networks.Network, error)
+	GetExternalNetworkInfoByName(name string) ([]networks.Network, error)
+	// FloatingIP
+	CreateFloatingIP(createOpts floatingips.CreateOpts) (*floatingips.FloatingIP, error)
+	DeleteFloatingIP(id string) error
+	ListFip(listOpts floatingips.ListOpts) ([]floatingips.FloatingIP, error)
+	GetFipbyName(name string) ([]floatingips.FloatingIP, error)
+	// Security Group
+	CreateSecurityGroup(listOpts groups.CreateOpts) (*groups.SecGroup, error)
+	DeleteSecurityGroup(groupID string) error
+	ListSecurityGroup(listOpts groups.ListOpts) ([]groups.SecGroup, error)
+	GetSecurityGroupbyName(name string) ([]groups.SecGroup, error)
+	// Security Group rules
+	CreateRule(createOpts rules.CreateOpts) (*rules.SecGroupRule, error)
 }
 
 // FactoryFactory creates instances of Factory.
