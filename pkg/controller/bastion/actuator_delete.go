@@ -16,12 +16,15 @@ package bastion
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"time"
 
 	"github.com/gardener/gardener-extension-provider-openstack/pkg/openstack"
 	openstaclClient "github.com/gardener/gardener-extension-provider-openstack/pkg/openstack/client"
 
 	"github.com/gardener/gardener/extensions/pkg/controller"
+	ctrlerror "github.com/gardener/gardener/extensions/pkg/controller/error"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/go-logr/logr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -53,6 +56,18 @@ func (a *actuator) Delete(ctx context.Context, bastion *extensionsv1alpha1.Basti
 	err = removePublicIPAddress(logger, openstackClientFactory, opt)
 	if err != nil {
 		return fmt.Errorf("failed to remove public ip address: %w", err)
+	}
+
+	deleted, err := isInstanceDeleted(openstackClientFactory, opt)
+	if err != nil {
+		return fmt.Errorf("failed to check for bastion instance: %w", err)
+	}
+
+	if !deleted {
+		return &ctrlerror.RequeueAfterError{
+			RequeueAfter: 10 * time.Second,
+			Cause:        errors.New("bastion instance is still deleting"),
+		}
 	}
 
 	err = removeSecurityGroup(openstackClientFactory, opt)
@@ -102,11 +117,6 @@ func removePublicIPAddress(logger logr.Logger, openstackClientFactory openstaclC
 }
 
 func removeSecurityGroup(openstackClientFactory openstaclClient.Factory, opt *Options) error {
-	instance, err := getBastionInstance(openstackClientFactory, opt.BastionInstanceName)
-	if err != nil || instance != nil {
-		return fmt.Errorf("instance delete processing, security group in use")
-	}
-
 	bastionsecuritygroup, err := getSecurityGroupId(openstackClientFactory, opt.SecurityGroup)
 	if err != nil {
 		return err
@@ -117,4 +127,13 @@ func removeSecurityGroup(openstackClientFactory openstaclClient.Factory, opt *Op
 	}
 
 	return deleteSecurityGroup(openstackClientFactory, bastionsecuritygroup[0].ID)
+}
+
+func isInstanceDeleted(openstackClientFactory openstaclClient.Factory, opt *Options) (bool, error) {
+	instance, err := getBastionInstance(openstackClientFactory, opt.BastionInstanceName)
+	if err != nil {
+		return false, err
+	}
+
+	return instance == nil, err
 }
