@@ -44,7 +44,6 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/rules"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -233,7 +232,7 @@ var _ = Describe("Bastion tests", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			By("Tearing down network")
-			err := teardownNetwork(logger, *networkID, openstackClient)
+			err := teardownNetwork(logger, *networkID, *routerID, *subNetID, openstackClient)
 			Expect(err).NotTo(HaveOccurred())
 
 			By("Tearing down router")
@@ -419,21 +418,11 @@ func teardownShootSecurityGroup(logger *logrus.Entry, groupID string, openstackC
 	return nil
 }
 
-func teardownNetwork(logger *logrus.Entry, networkID string, openstackClient *OpenstackClient) error {
+func teardownNetwork(logger *logrus.Entry, networkID, routerID, subnetID string, openstackClient *OpenstackClient) error {
 	logger.Infof("Waiting until network '%s' is deleted...", networkID)
 
-	allPages, err := ports.List(openstackClient.NetworkingClient, ports.ListOpts{NetworkID: networkID}).AllPages()
+	_, err := routers.RemoveInterface(openstackClient.NetworkingClient, routerID, routers.RemoveInterfaceOpts{SubnetID: subnetID}).Extract()
 	Expect(err).NotTo(HaveOccurred())
-
-	allPorts, err := ports.ExtractPorts(allPages)
-	Expect(err).NotTo(HaveOccurred())
-
-	for _, port := range allPorts {
-		_, err = ports.Update(openstackClient.NetworkingClient, port.ID, ports.UpdateOpts{DeviceOwner: pointer.String("")}).Extract()
-		Expect(err).NotTo(HaveOccurred())
-		err = ports.Delete(openstackClient.NetworkingClient, port.ID).ExtractErr()
-		Expect(err).NotTo(HaveOccurred())
-	}
 
 	err = networks.Delete(openstackClient.NetworkingClient, networkID).ExtractErr()
 	Expect(err).NotTo(HaveOccurred())
