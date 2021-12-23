@@ -17,13 +17,11 @@ package bastion
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
 
 	openstackclient "github.com/gardener/gardener-extension-provider-openstack/pkg/openstack/client"
 
 	"github.com/gardener/gardener/extensions/pkg/controller/bastion"
 	"github.com/go-logr/logr"
-	"github.com/gophercloud/gophercloud"
 	computerfip "github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/floatingips"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/floatingips"
@@ -60,7 +58,7 @@ func (a *actuator) InjectClient(client client.Client) error {
 func getBastionInstance(openstackClientFactory openstackclient.Factory, name string) ([]servers.Server, error) {
 	computerclient, err := openstackClientFactory.Compute()
 	if err != nil {
-		if ignoreNotFoundError(err) == nil {
+		if openstackclient.IgnoreNotFoundError(err) == nil {
 			return nil, nil
 		}
 		return nil, err
@@ -166,24 +164,9 @@ func getExternalNetworkInfoByName(openstackClientFactory openstackclient.Factory
 func getFipbyName(openstackClientFactory openstackclient.Factory, name string) ([]floatingips.FloatingIP, error) {
 	client, err := openstackClientFactory.Networking()
 	if err != nil {
-		if ignoreNotFoundError(err) == nil {
-			return nil, nil
-		}
 		return nil, err
 	}
 	return client.GetFipbyName(name)
-}
-
-func ignoreNotFoundError(err error) error {
-	if err == nil {
-		return nil
-	}
-
-	if e, ok := err.(gophercloud.ErrDefault404); ok && e.Actual == http.StatusNotFound {
-		return nil
-	}
-
-	return err
 }
 
 func createSecurityGroup(openstackClientFactory openstackclient.Factory, createOpts groups.CreateOpts) (*groups.SecGroup, error) {
