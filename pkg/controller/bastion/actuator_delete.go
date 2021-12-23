@@ -79,7 +79,7 @@ func (a *actuator) Delete(ctx context.Context, bastion *extensionsv1alpha1.Basti
 
 func removeBastionInstance(logger logr.Logger, openstackClientFactory openstackclient.Factory, opt *Options) error {
 	instance, err := getBastionInstance(openstackClientFactory, opt.BastionInstanceName)
-	if err != nil {
+	if openstackclient.IgnoreNotFoundError(err) != nil {
 		return err
 	}
 
@@ -131,7 +131,7 @@ func removeSecurityGroup(openstackClientFactory openstackclient.Factory, opt *Op
 
 func isInstanceDeleted(openstackClientFactory openstackclient.Factory, opt *Options) (bool, error) {
 	instance, err := getBastionInstance(openstackClientFactory, opt.BastionInstanceName)
-	if err != nil {
+	if openstackclient.IgnoreNotFoundError(err) != nil {
 		return false, err
 	}
 

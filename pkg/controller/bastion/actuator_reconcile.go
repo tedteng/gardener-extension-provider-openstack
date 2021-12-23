@@ -97,7 +97,7 @@ func (a *actuator) Reconcile(ctx context.Context, bastion *extensionsv1alpha1.Ba
 
 	// refresh instance after public ip attached/created
 	instancenstatus, err := getBastionInstance(openstackClientFactory, opt.BastionInstanceName)
-	if err != nil {
+	if openstackclient.IgnoreNotFoundError(err) != nil {
 		return err
 	}
 
@@ -156,7 +156,11 @@ func ensurePublicIPAddress(opt *Options, openstackClientFactory openstackclient.
 
 func ensureComputeInstance(logger logr.Logger, openstackClientFactory openstackclient.Factory, opt *Options) (*servers.Server, error) {
 	getInstance, err := getBastionInstance(openstackClientFactory, opt.BastionInstanceName)
-	if err != nil || getInstance != nil {
+	if openstackclient.IgnoreNotFoundError(err) != nil {
+		return nil, err
+	}
+
+	if getInstance != nil {
 		return &getInstance[0], err
 	}
 
