@@ -21,7 +21,7 @@ import (
 	"time"
 
 	"github.com/gardener/gardener-extension-provider-openstack/pkg/openstack"
-	openstaclClient "github.com/gardener/gardener-extension-provider-openstack/pkg/openstack/client"
+	openstackclient "github.com/gardener/gardener-extension-provider-openstack/pkg/openstack/client"
 
 	"github.com/gardener/gardener/extensions/pkg/controller"
 	ctrlerror "github.com/gardener/gardener/extensions/pkg/controller/error"
@@ -77,7 +77,7 @@ func (a *actuator) Delete(ctx context.Context, bastion *extensionsv1alpha1.Basti
 	return nil
 }
 
-func removeBastionInstance(logger logr.Logger, openstackClientFactory openstaclClient.Factory, opt *Options) error {
+func removeBastionInstance(logger logr.Logger, openstackClientFactory openstackclient.Factory, opt *Options) error {
 	instance, err := getBastionInstance(openstackClientFactory, opt.BastionInstanceName)
 	if err != nil {
 		return err
@@ -97,7 +97,7 @@ func removeBastionInstance(logger logr.Logger, openstackClientFactory openstaclC
 	return nil
 }
 
-func removePublicIPAddress(logger logr.Logger, openstackClientFactory openstaclClient.Factory, opt *Options) error {
+func removePublicIPAddress(logger logr.Logger, openstackClientFactory openstackclient.Factory, opt *Options) error {
 	fip, err := getFipbyName(openstackClientFactory, opt.BastionInstanceName)
 	if err != nil {
 		return err
@@ -116,7 +116,7 @@ func removePublicIPAddress(logger logr.Logger, openstackClientFactory openstaclC
 	return nil
 }
 
-func removeSecurityGroup(openstackClientFactory openstaclClient.Factory, opt *Options) error {
+func removeSecurityGroup(openstackClientFactory openstackclient.Factory, opt *Options) error {
 	bastionsecuritygroup, err := getSecurityGroupId(openstackClientFactory, opt.SecurityGroup)
 	if err != nil {
 		return err
@@ -129,7 +129,7 @@ func removeSecurityGroup(openstackClientFactory openstaclClient.Factory, opt *Op
 	return deleteSecurityGroup(openstackClientFactory, bastionsecuritygroup[0].ID)
 }
 
-func isInstanceDeleted(openstackClientFactory openstaclClient.Factory, opt *Options) (bool, error) {
+func isInstanceDeleted(openstackClientFactory openstackclient.Factory, opt *Options) (bool, error) {
 	instance, err := getBastionInstance(openstackClientFactory, opt.BastionInstanceName)
 	if err != nil {
 		return false, err

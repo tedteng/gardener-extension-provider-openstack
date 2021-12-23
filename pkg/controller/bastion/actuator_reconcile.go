@@ -20,7 +20,7 @@ import (
 	"time"
 
 	"github.com/gardener/gardener-extension-provider-openstack/pkg/openstack"
-	openstaclClient "github.com/gardener/gardener-extension-provider-openstack/pkg/openstack/client"
+	openstackclient "github.com/gardener/gardener-extension-provider-openstack/pkg/openstack/client"
 
 	"github.com/gardener/gardener/extensions/pkg/controller"
 	ctrlerror "github.com/gardener/gardener/extensions/pkg/controller/error"
@@ -124,7 +124,7 @@ func (a *actuator) Reconcile(ctx context.Context, bastion *extensionsv1alpha1.Ba
 	})
 }
 
-func ensurePublicIPAddress(opt *Options, openstackClientFactory openstaclClient.Factory) (*floatingips.FloatingIP, error) {
+func ensurePublicIPAddress(opt *Options, openstackClientFactory openstackclient.Factory) (*floatingips.FloatingIP, error) {
 	info, err := getFipbyName(openstackClientFactory, opt.BastionInstanceName)
 	if err != nil {
 		return nil, err
@@ -154,7 +154,7 @@ func ensurePublicIPAddress(opt *Options, openstackClientFactory openstaclClient.
 	return fip, nil
 }
 
-func ensureComputeInstance(logger logr.Logger, openstackClientFactory openstaclClient.Factory, opt *Options) (*servers.Server, error) {
+func ensureComputeInstance(logger logr.Logger, openstackClientFactory openstackclient.Factory, opt *Options) (*servers.Server, error) {
 	getInstance, err := getBastionInstance(openstackClientFactory, opt.BastionInstanceName)
 	if err != nil || getInstance != nil {
 		return &getInstance[0], err
@@ -240,7 +240,7 @@ func addressToIngress(dnsName *string, ipAddress *string) *corev1.LoadBalancerIn
 	return ingress
 }
 
-func ensureAssociateFIPWithInstance(openstackClientFactory openstaclClient.Factory, instance *servers.Server, floatingIP *floatingips.FloatingIP) (bool, error) {
+func ensureAssociateFIPWithInstance(openstackClientFactory openstackclient.Factory, instance *servers.Server, floatingIP *floatingips.FloatingIP) (bool, error) {
 	fipid, err := findFloatingIDbyInstnaceID(openstackClientFactory, instance.ID)
 	if err != nil {
 		return false, err
@@ -265,7 +265,7 @@ func ensureAssociateFIPWithInstance(openstackClientFactory openstaclClient.Facto
 	return true, nil
 }
 
-func ensureSecurityGroupRules(openstackClientFactory openstaclClient.Factory, opt *Options, secGroupID string) error {
+func ensureSecurityGroupRules(openstackClientFactory openstackclient.Factory, opt *Options, secGroupID string) error {
 	shootsecuritygroup, err := getSecurityGroupId(openstackClientFactory, opt.ShootName)
 	if err != nil || shootsecuritygroup == nil {
 		return err
@@ -280,7 +280,7 @@ func ensureSecurityGroupRules(openstackClientFactory openstaclClient.Factory, op
 	return nil
 }
 
-func createSeucirtyGroupRuleIfNOtExist(openstackClientFactory openstaclClient.Factory, createOpts rules.CreateOpts) error {
+func createSeucirtyGroupRuleIfNOtExist(openstackClientFactory openstackclient.Factory, createOpts rules.CreateOpts) error {
 	if _, err := createRules(openstackClientFactory, createOpts); err != nil {
 		if _, ok := err.(gophercloud.ErrDefault409); ok {
 			return nil
@@ -291,7 +291,7 @@ func createSeucirtyGroupRuleIfNOtExist(openstackClientFactory openstaclClient.Fa
 	return nil
 }
 
-func ensureSecurityGroup(openstackClientFactory openstaclClient.Factory, opt *Options) (groups.SecGroup, error) {
+func ensureSecurityGroup(openstackClientFactory openstackclient.Factory, opt *Options) (groups.SecGroup, error) {
 	securityGroup, err := getSecurityGroupId(openstackClientFactory, opt.SecurityGroup)
 	if err != nil {
 		return groups.SecGroup{}, err
