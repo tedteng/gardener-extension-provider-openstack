@@ -194,8 +194,12 @@ func ensureComputeInstance(logger logr.Logger, openstackClientFactory openstackc
 }
 
 func getInstanceEndpoints(instance *servers.Server, opt *Options) (*bastionEndpoints, error) {
-	if instance == nil || instance.Status != "ACTIVE" {
+	if instance == nil {
 		return nil, fmt.Errorf("compute instance can't be nil")
+	}
+
+	if instance.Status != "ACTIVE" {
+		return nil, fmt.Errorf("compute instance not active yet")
 	}
 
 	endpoints := &bastionEndpoints{}
