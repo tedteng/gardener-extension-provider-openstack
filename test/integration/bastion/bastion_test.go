@@ -20,7 +20,6 @@ import (
 	"flag"
 	"fmt"
 	"net"
-	"net/http"
 	"path/filepath"
 	"time"
 
@@ -28,6 +27,7 @@ import (
 	openstackv1alpha1 "github.com/gardener/gardener-extension-provider-openstack/pkg/apis/openstack/v1alpha1"
 	bastionctrl "github.com/gardener/gardener-extension-provider-openstack/pkg/controller/bastion"
 	"github.com/gardener/gardener-extension-provider-openstack/pkg/openstack"
+	openstackclient "github.com/gardener/gardener-extension-provider-openstack/pkg/openstack/client"
 
 	"github.com/gardener/gardener/extensions/pkg/controller"
 	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
@@ -36,7 +36,6 @@ import (
 	"github.com/gardener/gardener/pkg/extensions"
 	gardenerutils "github.com/gardener/gardener/pkg/utils"
 	"github.com/gardener/gardener/test/framework"
-	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/external"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/floatingips"
@@ -314,18 +313,6 @@ func verifyPort42IsClosed(ctx context.Context, c client.Client, bastion *extensi
 	Expect(conn).To(BeNil())
 }
 
-func ignoreNotFoundError(err error) error {
-	if err == nil {
-		return nil
-	}
-
-	if e, ok := err.(gophercloud.ErrDefault404); ok && e.Actual == http.StatusNotFound {
-		return nil
-	}
-
-	return err
-}
-
 func prepareNewRouter(logger *logrus.Entry, routerName, subnetID string, openstackClient *OpenstackClient) (*string, error) {
 	logger.Infof("Waiting until router '%s' is created...", routerName)
 
@@ -551,15 +538,15 @@ func teardownBastion(ctx context.Context, logger *logrus.Entry, c client.Client,
 func verifyDeletion(openstackClient *OpenstackClient, name string) {
 	// bastion public ip should be gone
 	_, err := floatingips.List(openstackClient.NetworkingClient, floatingips.ListOpts{Description: name}).AllPages()
-	Expect(ignoreNotFoundError(err)).To(Succeed())
+	Expect(openstackclient.IgnoreNotFoundError(err)).To(Succeed())
 
 	// bastion Security group should be gone
 	_, err = groups.List(openstackClient.NetworkingClient, groups.ListOpts{Name: fmt.Sprintf("%s-sg", name)}).AllPages()
-	Expect(ignoreNotFoundError(err)).To(Succeed())
+	Expect(openstackclient.IgnoreNotFoundError(err)).To(Succeed())
 
 	// bastion instance should be terminated and not found
 	_, err = servers.List(openstackClient.NetworkingClient, servers.ListOpts{Name: name}).AllPages()
-	Expect(ignoreNotFoundError(err)).To(Succeed())
+	Expect(openstackclient.IgnoreNotFoundError(err)).To(Succeed())
 }
 
 func checkSecurityRuleslExists(openstackClient *OpenstackClient, securityRuleName string) {
@@ -573,10 +560,10 @@ func checkSecurityRuleslExists(openstackClient *OpenstackClient, securityRuleNam
 func verifyCreation(openstackClient *OpenstackClient, options *bastionctrl.Options) {
 	By("checkSecurityGroupExists")
 	allPages, err := groups.List(openstackClient.NetworkingClient, groups.ListOpts{Name: options.SecurityGroup}).AllPages()
-	Expect(ignoreNotFoundError(err)).To(Succeed())
+	Expect(openstackclient.IgnoreNotFoundError(err)).To(Succeed())
 
 	securityGroup, err := groups.ExtractGroups(allPages)
-	Expect(ignoreNotFoundError(err)).To(Succeed())
+	Expect(openstackclient.IgnoreNotFoundError(err)).To(Succeed())
 	Expect(securityGroup[0].Description).To(Equal(options.SecurityGroup))
 
 	By("checkNSGExists")

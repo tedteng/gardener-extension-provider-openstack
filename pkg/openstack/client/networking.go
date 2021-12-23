@@ -156,7 +156,7 @@ func (c *NetworkingClient) DeleteSecurityGroup(groupID string) error {
 func (c *NetworkingClient) ListSecurityGroup(listOpts groups.ListOpts) ([]groups.SecGroup, error) {
 	allPages, err := groups.List(c.client, listOpts).AllPages()
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	return groups.ExtractGroups(allPages)
 }

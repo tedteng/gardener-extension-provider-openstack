@@ -175,3 +175,19 @@ func IsNotFoundError(err error) bool {
 
 	return false
 }
+
+func IgnoreNotFoundError(err error) error {
+	if err == nil {
+		return nil
+	}
+
+	if _, ok := err.(gophercloud.ErrDefault404); ok {
+		return nil
+	}
+
+	if _, ok := err.(gophercloud.Err404er); ok {
+		return nil
+	}
+
+	return err
+}
