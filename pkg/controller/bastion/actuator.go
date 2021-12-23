@@ -58,9 +58,6 @@ func (a *actuator) InjectClient(client client.Client) error {
 func getBastionInstance(openstackClientFactory openstackclient.Factory, name string) ([]servers.Server, error) {
 	computerclient, err := openstackClientFactory.Compute()
 	if err != nil {
-		if openstackclient.IgnoreNotFoundError(err) == nil {
-			return nil, nil
-		}
 		return nil, err
 	}
 	return computerclient.FindServersByName(name)

@@ -176,6 +176,7 @@ func IsNotFoundError(err error) bool {
 	return false
 }
 
+// IgnoreNotFoundError ignore not found error
 func IgnoreNotFoundError(err error) error {
 	if err == nil {
 		return nil
