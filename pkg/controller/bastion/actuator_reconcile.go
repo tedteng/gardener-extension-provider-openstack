@@ -101,6 +101,10 @@ func (a *actuator) Reconcile(ctx context.Context, bastion *extensionsv1alpha1.Ba
 		return err
 	}
 
+	if len(instancenstatus) != 0 {
+		return err
+	}
+
 	// check if the instance already exists and has an IP
 	endpoints, err := getInstanceEndpoints(&instancenstatus[0], opt)
 	if err != nil {
@@ -160,7 +164,7 @@ func ensureComputeInstance(logger logr.Logger, openstackClientFactory openstackc
 		return nil, err
 	}
 
-	if getInstance != nil {
+	if len(getInstance) != 0 {
 		return &getInstance[0], err
 	}
 
