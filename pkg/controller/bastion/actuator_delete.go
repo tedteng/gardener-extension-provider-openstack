@@ -83,7 +83,7 @@ func removeBastionInstance(logger logr.Logger, openstackClientFactory openstackc
 		return err
 	}
 
-	if instance == nil {
+	if len(instance) == 0 {
 		return nil
 	}
 
@@ -135,5 +135,9 @@ func isInstanceDeleted(openstackClientFactory openstackclient.Factory, opt *Opti
 		return false, err
 	}
 
-	return instance == nil, err
+	if len(instance) == 0 {
+		return true, err
+	}
+
+	return false, err
 }
