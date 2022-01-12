@@ -79,22 +79,12 @@ func (c *ComputeClient) ListServerGroups() ([]servergroups.ServerGroup, error) {
 
 // CreateServer retrieves the Create of Compute service.
 func (c *ComputeClient) CreateServer(createOpts servers.CreateOpts) (*servers.Server, error) {
-	server, err := servers.Create(c.client, createOpts).Extract()
-	if err != nil {
-		return nil, err
-	}
-
-	return server, nil
+	return servers.Create(c.client, createOpts).Extract()
 }
 
 // DeleteServer delete the Compute service.
 func (c *ComputeClient) DeleteServer(id string) error {
-	err := servers.Delete(c.client, id).ExtractErr()
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return servers.Delete(c.client, id).ExtractErr()
 }
 
 // FindServersByName retrieves the Compute Server by Name

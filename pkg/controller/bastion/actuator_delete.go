@@ -72,23 +72,22 @@ func (a *actuator) Delete(ctx context.Context, bastion *extensionsv1alpha1.Basti
 
 	err = removeSecurityGroup(openstackClientFactory, opt)
 	if err != nil {
-		return fmt.Errorf("failed to remove seucirty group: %w", err)
+		return fmt.Errorf("failed to remove security group: %w", err)
 	}
 	return nil
 }
 
 func removeBastionInstance(logger logr.Logger, openstackClientFactory openstackclient.Factory, opt *Options) error {
-	instance, err := getBastionInstance(openstackClientFactory, opt.BastionInstanceName)
+	instances, err := getBastionInstance(openstackClientFactory, opt.BastionInstanceName)
 	if openstackclient.IgnoreNotFoundError(err) != nil {
 		return err
 	}
 
-	if len(instance) == 0 {
+	if len(instances) == 0 {
 		return nil
 	}
 
-	err = deleteBastionInstance(openstackClientFactory, instance[0].ID)
-
+	err = deleteBastionInstance(openstackClientFactory, instances[0].ID)
 	if err != nil {
 		return fmt.Errorf("failed to terminate bastion instance: %w", err)
 	}
@@ -98,21 +97,21 @@ func removeBastionInstance(logger logr.Logger, openstackClientFactory openstackc
 }
 
 func removePublicIPAddress(logger logr.Logger, openstackClientFactory openstackclient.Factory, opt *Options) error {
-	fip, err := getFipbyName(openstackClientFactory, opt.BastionInstanceName)
+	fips, err := getFipByName(openstackClientFactory, opt.BastionInstanceName)
 	if err != nil {
 		return err
 	}
 
-	if fip == nil {
+	if fips == nil {
 		return nil
 	}
 
-	err = deleteFloatingIP(openstackClientFactory, fip[0].ID)
+	err = deleteFloatingIP(openstackClientFactory, fips[0].ID)
 	if err != nil {
 		return fmt.Errorf("failed to terminate bastion Public IP: %w", err)
 	}
 
-	logger.Info("Public IP removed", "public IP ID", fip[0].ID)
+	logger.Info("Public IP removed", "public IP ID", fips[0].ID)
 	return nil
 }
 
@@ -130,12 +129,12 @@ func removeSecurityGroup(openstackClientFactory openstackclient.Factory, opt *Op
 }
 
 func isInstanceDeleted(openstackClientFactory openstackclient.Factory, opt *Options) (bool, error) {
-	instance, err := getBastionInstance(openstackClientFactory, opt.BastionInstanceName)
+	instances, err := getBastionInstance(openstackClientFactory, opt.BastionInstanceName)
 	if openstackclient.IgnoreNotFoundError(err) != nil {
 		return false, err
 	}
 
-	if len(instance) == 0 {
+	if len(instances) == 0 {
 		return true, err
 	}
 
