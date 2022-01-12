@@ -29,9 +29,13 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-//Maximum length for "base" name due to fact that we use this name to name other Alicloud resources,
+//Maximum length for "base" name due to fact that we use this name to name other openstack resources,
 //
-const maxLengthForBaseName = 33
+const (
+	maxLengthForBaseName = 33
+	imageRef             = "13850abb-e451-45a2-8437-bdf6de530a19" //m1.tiny
+	flavorRef            = "10"
+)
 
 // Options contains provider-related information required for setting up
 // a bastion instance. This struct combines precomputed values like the
@@ -79,9 +83,9 @@ func DetermineOptions(bastion *extensionsv1alpha1.Bastion, cluster *controller.C
 		SecretReference:     secretReference,
 		SecurityGroup:       securityGroupName(baseResourceName),
 		Region:              region,
-		FlavorRef:           "10",
+		FlavorRef:           flavorRef,
 		UserData:            []byte(base64.StdEncoding.EncodeToString(bastion.Spec.UserData)),
-		ImageRef:            "13850abb-e451-45a2-8437-bdf6de530a19", //m1.tiny
+		ImageRef:            imageRef,
 		FloatingPoolName:    infrastructureConfig.FloatingPoolName,
 	}, nil
 }

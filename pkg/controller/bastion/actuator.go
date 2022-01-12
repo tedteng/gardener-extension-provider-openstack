@@ -22,7 +22,7 @@ import (
 
 	"github.com/gardener/gardener/extensions/pkg/controller/bastion"
 	"github.com/go-logr/logr"
-	computerfip "github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/floatingips"
+	computefip "github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/floatingips"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/floatingips"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
@@ -42,7 +42,6 @@ type actuator struct {
 	logger                 logr.Logger
 }
 
-// func newActuator(openstackClientFactory openstackclient.FactoryFactory) bastion.Actuator {
 func newActuator(openstackClientFactory openstackclient.FactoryFactory) bastion.Actuator {
 	return &actuator{
 		openstackClientFactory: openstackClientFactory,
@@ -56,27 +55,27 @@ func (a *actuator) InjectClient(client client.Client) error {
 }
 
 func getBastionInstance(openstackClientFactory openstackclient.Factory, name string) ([]servers.Server, error) {
-	computerclient, err := openstackClientFactory.Compute()
+	computeclient, err := openstackClientFactory.Compute()
 	if err != nil {
 		return nil, err
 	}
-	return computerclient.FindServersByName(name)
+	return computeclient.FindServersByName(name)
 }
 
 func createBastionInstance(openstackClientFactory openstackclient.Factory, parameters servers.CreateOpts) (*servers.Server, error) {
-	computerclient, err := openstackClientFactory.Compute()
+	computeclient, err := openstackClientFactory.Compute()
 	if err != nil {
 		return nil, err
 	}
-	return computerclient.CreateServer(parameters)
+	return computeclient.CreateServer(parameters)
 }
 
 func deleteBastionInstance(openstackClientFactory openstackclient.Factory, id string) error {
-	computerclient, err := openstackClientFactory.Compute()
+	computeclient, err := openstackClientFactory.Compute()
 	if err != nil {
 		return err
 	}
-	return computerclient.DeleteServer(id)
+	return computeclient.DeleteServer(id)
 }
 
 // GetIPs return privateip, publicip
@@ -114,7 +113,6 @@ func GetIPs(s *servers.Server, opt *Options) (string, string, error) {
 	}
 
 	return privateIP, publicIp, nil
-
 }
 
 func createFloatingIP(openstackClientFactory openstackclient.Factory, parameters floatingips.CreateOpts) (*floatingips.FloatingIP, error) {
@@ -133,7 +131,7 @@ func deleteFloatingIP(openstackClientFactory openstackclient.Factory, id string)
 	return client.DeleteFloatingIP(id)
 }
 
-func associateFIPWithInstance(openstackClientFactory openstackclient.Factory, id string, parameter computerfip.AssociateOpts) error {
+func associateFIPWithInstance(openstackClientFactory openstackclient.Factory, id string, parameter computefip.AssociateOpts) error {
 	client, err := openstackClientFactory.Compute()
 	if err != nil {
 		return err
@@ -141,7 +139,7 @@ func associateFIPWithInstance(openstackClientFactory openstackclient.Factory, id
 	return client.AssociateFIPWithInstance(id, parameter)
 }
 
-func findFloatingIDbyInstnaceID(openstackClientFactory openstackclient.Factory, id string) (string, error) {
+func findFloatingIDByInstanceID(openstackClientFactory openstackclient.Factory, id string) (string, error) {
 	client, err := openstackClientFactory.Compute()
 	if err != nil {
 		return "", err
@@ -155,10 +153,9 @@ func getExternalNetworkInfoByName(openstackClientFactory openstackclient.Factory
 		return nil, err
 	}
 	return client.GetExternalNetworkInfoByName(name)
-
 }
 
-func getFipbyName(openstackClientFactory openstackclient.Factory, name string) ([]floatingips.FloatingIP, error) {
+func getFipByName(openstackClientFactory openstackclient.Factory, name string) ([]floatingips.FloatingIP, error) {
 	client, err := openstackClientFactory.Networking()
 	if err != nil {
 		return nil, err

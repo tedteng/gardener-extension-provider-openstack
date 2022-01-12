@@ -20,7 +20,7 @@ import (
 
 	"github.com/gardener/gardener-extension-provider-openstack/pkg/openstack"
 	"github.com/gophercloud/gophercloud"
-	computerfip "github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/floatingips"
+	computefip "github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/floatingips"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/servergroups"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/floatingips"
@@ -82,7 +82,7 @@ type Compute interface {
 	DeleteServer(id string) error
 	ListServerGroups() ([]servergroups.ServerGroup, error)
 	FindServersByName(name string) ([]servers.Server, error)
-	AssociateFIPWithInstance(serverID string, associateOpts computerfip.AssociateOpts) error
+	AssociateFIPWithInstance(serverID string, associateOpts computefip.AssociateOpts) error
 	FindFloatingIDbyInstnaceID(id string) (string, error)
 }
 

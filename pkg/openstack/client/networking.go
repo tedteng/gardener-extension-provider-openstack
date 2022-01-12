@@ -59,12 +59,7 @@ func (c *NetworkingClient) ListNetwork(listOpts networks.ListOpts) ([]networks.N
 	if err != nil {
 		return nil, err
 	}
-
-	nets, err := networks.ExtractNetworks(pages)
-	if err != nil {
-		return nil, err
-	}
-	return nets, nil
+	return networks.ExtractNetworks(pages)
 }
 
 // GetNetworkByName return a network info by name
@@ -78,19 +73,14 @@ func (c *NetworkingClient) GetNetworkByName(name string) ([]networks.Network, er
 // GetExternalNetworkInfoByName return external network info by name
 func (c *NetworkingClient) GetExternalNetworkInfoByName(name string) ([]networks.Network, error) {
 	allPages, err := networks.List(c.client, external.ListOptsExt{
-		ListOptsBuilder: networks.ListOpts{
-			Name: name},
-		External: pointer.Bool(true),
+		ListOptsBuilder: networks.ListOpts{Name: name},
+		External:        pointer.Bool(true),
 	}).AllPages()
 	if err != nil {
 		return nil, err
 	}
 
-	allNetworks, err := networks.ExtractNetworks(allPages)
-	if err != nil {
-		return nil, err
-	}
-	return allNetworks, nil
+	return networks.ExtractNetworks(allPages)
 }
 
 // CreateFloatingIP create floating ip

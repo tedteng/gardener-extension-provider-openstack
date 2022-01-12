@@ -27,7 +27,7 @@ import (
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/go-logr/logr"
 	"github.com/gophercloud/gophercloud"
-	computerfip "github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/floatingips"
+	computefip "github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/floatingips"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/floatingips"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
@@ -37,13 +37,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// bastionEndpoints collects the endpoints the bastion host provides; the
-// private endpoint is important for opening a port on the worker node
-// ingress NSG rule to allow SSH from that node, the public endpoint is where
-// the enduser connects to establish the SSH connection.
+// bastionEndpoints holds the endpoints the bastion host provides
 type bastionEndpoints struct {
+	// private is the private endpoint of the bastion. It is required when opening a port on the worker node to allow SSH access from the bastion
 	private *corev1.LoadBalancerIngress
-	public  *corev1.LoadBalancerIngress
+	//  public is the public endpoint where the enduser connects to establish the SSH connection.
+	public *corev1.LoadBalancerIngress
 }
 
 // Ready returns true if both public and private interfaces each have either
@@ -96,17 +95,17 @@ func (a *actuator) Reconcile(ctx context.Context, bastion *extensionsv1alpha1.Ba
 	}
 
 	// refresh instance after public ip attached/created
-	instancenstatus, err := getBastionInstance(openstackClientFactory, opt.BastionInstanceName)
+	instances, err := getBastionInstance(openstackClientFactory, opt.BastionInstanceName)
 	if openstackclient.IgnoreNotFoundError(err) != nil {
 		return err
 	}
 
-	if len(instancenstatus) != 0 {
+	if len(instances) != 0 {
 		return err
 	}
 
 	// check if the instance already exists and has an IP
-	endpoints, err := getInstanceEndpoints(&instancenstatus[0], opt)
+	endpoints, err := getInstanceEndpoints(&instances[0], opt)
 	if err != nil {
 		return err
 	}
@@ -129,13 +128,13 @@ func (a *actuator) Reconcile(ctx context.Context, bastion *extensionsv1alpha1.Ba
 }
 
 func ensurePublicIPAddress(opt *Options, openstackClientFactory openstackclient.Factory) (*floatingips.FloatingIP, error) {
-	info, err := getFipbyName(openstackClientFactory, opt.BastionInstanceName)
+	fips, err := getFipByName(openstackClientFactory, opt.BastionInstanceName)
 	if err != nil {
 		return nil, err
 	}
 
-	if info != nil && info[0].Status == "ACTIVE" {
-		return &info[0], nil
+	if fips != nil && fips[0].Status == "ACTIVE" {
+		return &fips[0], nil
 	}
 
 	logger.Info("creating new bastion Public IP")
@@ -159,13 +158,13 @@ func ensurePublicIPAddress(opt *Options, openstackClientFactory openstackclient.
 }
 
 func ensureComputeInstance(logger logr.Logger, openstackClientFactory openstackclient.Factory, opt *Options) (*servers.Server, error) {
-	getInstance, err := getBastionInstance(openstackClientFactory, opt.BastionInstanceName)
+	instances, err := getBastionInstance(openstackClientFactory, opt.BastionInstanceName)
 	if openstackclient.IgnoreNotFoundError(err) != nil {
 		return nil, err
 	}
 
-	if len(getInstance) != 0 {
-		return &getInstance[0], err
+	if len(instances) != 0 {
+		return &instances[0], err
 	}
 
 	logger.Info("Creating new bastion compute instance")
@@ -214,7 +213,7 @@ func getInstanceEndpoints(instance *servers.Server, opt *Options) (*bastionEndpo
 
 	privateIP, externalIP, err := GetIPs(instance, opt)
 	if err != nil {
-		return nil, fmt.Errorf("no IP found: %v", err)
+		return nil, fmt.Errorf("no IP found: %w", err)
 	}
 
 	if ingress := addressToIngress(nil, &privateIP); ingress != nil {
@@ -253,7 +252,7 @@ func addressToIngress(dnsName *string, ipAddress *string) *corev1.LoadBalancerIn
 }
 
 func ensureAssociateFIPWithInstance(openstackClientFactory openstackclient.Factory, instance *servers.Server, floatingIP *floatingips.FloatingIP) (bool, error) {
-	fipid, err := findFloatingIDbyInstnaceID(openstackClientFactory, instance.ID)
+	fipid, err := findFloatingIDByInstanceID(openstackClientFactory, instance.ID)
 	if err != nil {
 		return false, err
 	}
@@ -266,7 +265,7 @@ func ensureAssociateFIPWithInstance(openstackClientFactory openstackclient.Facto
 		return false, fmt.Errorf("instance or public ip address not ready yet")
 	}
 
-	associateOpts := computerfip.AssociateOpts{
+	associateOpts := computefip.AssociateOpts{
 		FloatingIP: floatingIP.FloatingIP,
 	}
 
@@ -285,14 +284,14 @@ func ensureSecurityGroupRules(openstackClientFactory openstackclient.Factory, op
 
 	rules := []rules.CreateOpts{IngressAllowSSH(opt, secGroupID), EgressAllowSSHToWorker(opt, secGroupID, shootsecuritygroup[0].ID)}
 	for _, item := range rules {
-		if err := createSeucirtyGroupRuleIfNOtExist(openstackClientFactory, item); err != nil {
+		if err := createSecurityGroupRuleIfNotExist(openstackClientFactory, item); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func createSeucirtyGroupRuleIfNOtExist(openstackClientFactory openstackclient.Factory, createOpts rules.CreateOpts) error {
+func createSecurityGroupRuleIfNotExist(openstackClientFactory openstackclient.Factory, createOpts rules.CreateOpts) error {
 	if _, err := createRules(openstackClientFactory, createOpts); err != nil {
 		if _, ok := err.(gophercloud.ErrDefault409); ok {
 			return nil
@@ -304,13 +303,13 @@ func createSeucirtyGroupRuleIfNOtExist(openstackClientFactory openstackclient.Fa
 }
 
 func ensureSecurityGroup(openstackClientFactory openstackclient.Factory, opt *Options) (groups.SecGroup, error) {
-	securityGroup, err := getSecurityGroupId(openstackClientFactory, opt.SecurityGroup)
+	securityGroups, err := getSecurityGroupId(openstackClientFactory, opt.SecurityGroup)
 	if err != nil {
 		return groups.SecGroup{}, err
 	}
 
-	if securityGroup != nil {
-		return securityGroup[0], nil
+	if securityGroups != nil {
+		return securityGroups[0], nil
 	}
 
 	result, err := createSecurityGroup(openstackClientFactory, groups.CreateOpts{
