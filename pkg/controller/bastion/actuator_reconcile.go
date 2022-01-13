@@ -133,7 +133,7 @@ func ensurePublicIPAddress(opt *Options, openstackClientFactory openstackclient.
 		return nil, err
 	}
 
-	if fips != nil && fips[0].Status == "ACTIVE" {
+	if len(fips) != 0 && fips[0].Status == "ACTIVE" {
 		return &fips[0], nil
 	}
 
