@@ -89,18 +89,18 @@ func (a *actuator) Reconcile(ctx context.Context, bastion *extensionsv1alpha1.Ba
 		return err
 	}
 
-	ready, err := ensureAssociateFIPWithInstance(openstackClientFactory, instance, fipid)
-	if err != nil || !ready {
+	err = ensureAssociateFIPWithInstance(openstackClientFactory, instance, fipid)
+	if err != nil {
 		return err
 	}
 
 	// refresh instance after public ip attached/created
 	instances, err := getBastionInstance(openstackClientFactory, opt.BastionInstanceName)
-	if openstackclient.IgnoreNotFoundError(err) != nil {
+	if err != nil {
 		return err
 	}
 
-	if len(instances) != 0 {
+	if len(instances) == 0 {
 		return err
 	}
 
@@ -251,18 +251,18 @@ func addressToIngress(dnsName *string, ipAddress *string) *corev1.LoadBalancerIn
 	return ingress
 }
 
-func ensureAssociateFIPWithInstance(openstackClientFactory openstackclient.Factory, instance *servers.Server, floatingIP *floatingips.FloatingIP) (bool, error) {
+func ensureAssociateFIPWithInstance(openstackClientFactory openstackclient.Factory, instance *servers.Server, floatingIP *floatingips.FloatingIP) error {
 	fipid, err := findFloatingIDByInstanceID(openstackClientFactory, instance.ID)
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	if fipid != "" {
-		return true, nil
+		return nil
 	}
 
 	if floatingIP.Status != "ACTIVE" || instance.Status != "ACTIVE" {
-		return false, fmt.Errorf("instance or public ip address not ready yet")
+		return fmt.Errorf("instance or public ip address not ready yet")
 	}
 
 	associateOpts := computefip.AssociateOpts{
@@ -271,9 +271,9 @@ func ensureAssociateFIPWithInstance(openstackClientFactory openstackclient.Facto
 
 	err = associateFIPWithInstance(openstackClientFactory, instance.ID, associateOpts)
 	if err != nil {
-		return false, fmt.Errorf("failed to associate public ip address %s to instance %s: %w", floatingIP.FloatingIP, instance.Name, err)
+		return fmt.Errorf("failed to associate public ip address %s to instance %s: %w", floatingIP.FloatingIP, instance.Name, err)
 	}
-	return true, nil
+	return nil
 }
 
 func ensureSecurityGroupRules(openstackClientFactory openstackclient.Factory, opt *Options, secGroupID string) error {
