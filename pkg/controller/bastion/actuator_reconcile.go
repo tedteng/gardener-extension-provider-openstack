@@ -16,6 +16,7 @@ package bastion
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -115,7 +116,7 @@ func (a *actuator) Reconcile(ctx context.Context, bastion *extensionsv1alpha1.Ba
 			// requeue rather soon, so that the user (most likely gardenctl eventually)
 			// doesn't have to wait too long for the public endpoint to become available
 			RequeueAfter: 5 * time.Second,
-			Cause:        fmt.Errorf("bastion instance has no public/private endpoints yet"),
+			Cause:        errors.New("bastion instance has no public/private endpoints yet"),
 		}
 	}
 
@@ -202,11 +203,11 @@ func ensureComputeInstance(logger logr.Logger, openstackClientFactory openstackc
 
 func getInstanceEndpoints(instance *servers.Server, opt *Options) (*bastionEndpoints, error) {
 	if instance == nil {
-		return nil, fmt.Errorf("compute instance can't be nil")
+		return nil, errors.New("compute instance can't be nil")
 	}
 
 	if instance.Status != "ACTIVE" {
-		return nil, fmt.Errorf("compute instance not active yet")
+		return nil, errors.New("compute instance not active yet")
 	}
 
 	endpoints := &bastionEndpoints{}
