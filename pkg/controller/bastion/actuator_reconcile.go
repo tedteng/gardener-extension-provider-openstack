@@ -278,12 +278,12 @@ func ensureAssociateFIPWithInstance(openstackClientFactory openstackclient.Facto
 }
 
 func ensureSecurityGroupRules(openstackClientFactory openstackclient.Factory, opt *Options, secGroupID string) error {
-	shootsecuritygroup, err := getSecurityGroupId(openstackClientFactory, opt.ShootName)
-	if err != nil || shootsecuritygroup == nil {
+	securityGroups, err := getSecurityGroupId(openstackClientFactory, opt.ShootName)
+	if err != nil || len(securityGroups) == 0 {
 		return err
 	}
 
-	rules := []rules.CreateOpts{IngressAllowSSH(opt, secGroupID), EgressAllowSSHToWorker(opt, secGroupID, shootsecuritygroup[0].ID)}
+	rules := []rules.CreateOpts{IngressAllowSSH(opt, secGroupID), EgressAllowSSHToWorker(opt, secGroupID, securityGroups[0].ID)}
 	for _, item := range rules {
 		if err := createSecurityGroupRuleIfNotExist(openstackClientFactory, item); err != nil {
 			return err
@@ -309,7 +309,7 @@ func ensureSecurityGroup(openstackClientFactory openstackclient.Factory, opt *Op
 		return groups.SecGroup{}, err
 	}
 
-	if securityGroups != nil {
+	if len(securityGroups) != 0 {
 		return securityGroups[0], nil
 	}
 
