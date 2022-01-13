@@ -102,7 +102,7 @@ func removePublicIPAddress(logger logr.Logger, openstackClientFactory openstackc
 		return err
 	}
 
-	if fips == nil {
+	if len(fips) == 0 {
 		return nil
 	}
 
@@ -116,16 +116,16 @@ func removePublicIPAddress(logger logr.Logger, openstackClientFactory openstackc
 }
 
 func removeSecurityGroup(openstackClientFactory openstackclient.Factory, opt *Options) error {
-	bastionsecuritygroup, err := getSecurityGroupId(openstackClientFactory, opt.SecurityGroup)
+	bastionSecurityGroups, err := getSecurityGroupId(openstackClientFactory, opt.SecurityGroup)
 	if err != nil {
 		return err
 	}
 
-	if bastionsecuritygroup == nil {
+	if len(bastionSecurityGroups) == 0 {
 		return nil
 	}
 
-	return deleteSecurityGroup(openstackClientFactory, bastionsecuritygroup[0].ID)
+	return deleteSecurityGroup(openstackClientFactory, bastionSecurityGroups[0].ID)
 }
 
 func isInstanceDeleted(openstackClientFactory openstackclient.Factory, opt *Options) (bool, error) {
