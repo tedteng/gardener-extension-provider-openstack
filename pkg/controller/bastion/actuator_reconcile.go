@@ -291,7 +291,7 @@ func ensureSecurityGroupRules(openstackClientFactory openstackclient.Factory, op
 		return errors.New("securityGroups must not empty")
 	}
 
-	rules := []rules.CreateOpts{IngressAllowSSH(opt, secGroupID), EgressAllowSSHToWorker(opt, secGroupID, securityGroups[0].ID)}
+	rules := []rules.CreateOpts{IngressAllowSSH(opt, opt.EtherType, secGroupID, opt.EtherIpAddress), EgressAllowSSHToWorker(opt, secGroupID, securityGroups[0].ID)}
 	for _, item := range rules {
 		if err := createSecurityGroupRuleIfNotExist(openstackClientFactory, item); err != nil {
 			return err

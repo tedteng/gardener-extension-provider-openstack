@@ -567,7 +567,7 @@ func verifyCreation(openstackClient *OpenstackClient, options *bastionctrl.Optio
 	Expect(securityGroup[0].Description).To(Equal(options.SecurityGroup))
 
 	By("checkNSGExists")
-	checkSecurityRuleslExists(openstackClient, bastionctrl.IngressAllowSSH(options, "").Description)
+	checkSecurityRuleslExists(openstackClient, bastionctrl.IngressAllowSSH(options, "", "", "").Description)
 	checkSecurityRuleslExists(openstackClient, bastionctrl.EgressAllowSSHToWorker(options, "", "").Description)
 
 	By("checking bastion instance")

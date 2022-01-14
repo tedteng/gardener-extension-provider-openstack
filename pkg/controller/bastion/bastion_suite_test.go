@@ -76,23 +76,22 @@ var _ = Describe("Bastion", func() {
 		It("Should return a string array with ipV4 normalized addresses", func() {
 			bastion.Spec.Ingress = []extensionsv1alpha1.BastionIngressPolicy{
 				{IPBlock: networkingv1.IPBlock{
-					CIDR: "213.69.151.253/24",
+					CIDR: "0.0.0.0/0",
 				}},
 			}
-			res, err := ingressPermissions(bastion)
+			etherType, _, err := ingressPermissions(bastion)
 			Expect(err).To(Not(HaveOccurred()))
-			Expect(res[0]).To(Equal("213.69.151.0/24"))
-
+			Expect(string(etherType)).To(Equal("IPv4"))
 		})
-		It("Should throw an error with invalid CIDR entry", func() {
+		It("Should return a string array with ipV6 normalized addresses", func() {
 			bastion.Spec.Ingress = []extensionsv1alpha1.BastionIngressPolicy{
 				{IPBlock: networkingv1.IPBlock{
-					CIDR: "1234",
+					CIDR: "::/0",
 				}},
 			}
-			res, err := ingressPermissions(bastion)
-			Expect(err).To(HaveOccurred())
-			Expect(res).To(BeEmpty())
+			etherType, _, err := ingressPermissions(bastion)
+			Expect(err).To(Not(HaveOccurred()))
+			Expect(string(etherType)).To(Equal("IPv6"))
 		})
 	})
 
