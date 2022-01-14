@@ -23,9 +23,9 @@ func IngressAllowSSH(opt *Options, secGroupID string) rules.CreateOpts {
 	return rules.CreateOpts{
 		Direction:      "ingress",
 		Description:    ingressAllowSSHResourceName(opt.BastionInstanceName),
-		PortRangeMin:   1,
+		PortRangeMin:   22,
 		EtherType:      rules.EtherType4,
-		PortRangeMax:   65535,
+		PortRangeMax:   22,
 		Protocol:       "tcp",
 		SecGroupID:     secGroupID,
 		RemoteIPPrefix: "0.0.0.0/0",
@@ -37,9 +37,9 @@ func EgressAllowSSHToWorker(opt *Options, secGroupID string, remoteGroupID strin
 	return rules.CreateOpts{
 		Direction:     "egress",
 		Description:   egressAllowOnlyResourceName(opt.BastionInstanceName),
-		PortRangeMin:  1,
+		PortRangeMin:  22,
 		EtherType:     rules.EtherType4,
-		PortRangeMax:  65535,
+		PortRangeMax:  22,
 		Protocol:      "tcp",
 		SecGroupID:    secGroupID,
 		RemoteGroupID: remoteGroupID,
