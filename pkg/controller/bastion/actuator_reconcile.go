@@ -202,11 +202,7 @@ func ensureComputeInstance(logger logr.Logger, openstackClientFactory openstackc
 		return nil, fmt.Errorf("failed to create bastion compute instance: %w ", err)
 	}
 
-	if instance != nil {
-		return instance, err
-	}
-
-	return nil, fmt.Errorf("failed to get / create bastion compute instance: %w", err)
+	return instance, nil
 }
 
 func getInstanceEndpoints(instance *servers.Server, opt *Options) (*bastionEndpoints, error) {
