@@ -102,7 +102,7 @@ func (a *actuator) Reconcile(ctx context.Context, bastion *extensionsv1alpha1.Ba
 	}
 
 	if len(instances) == 0 {
-		return err
+		return errors.New("instances must not empty")
 	}
 
 	// check if the instance already exists and has an IP
@@ -145,6 +145,10 @@ func ensurePublicIPAddress(opt *Options, openstackClientFactory openstackclient.
 		return nil, err
 	}
 
+	if len(externalFipInfo) == 0 {
+		return nil, errors.New("externalFipInfo must not empty")
+	}
+
 	createOpts := floatingips.CreateOpts{
 		FloatingNetworkID: externalFipInfo[0].ID,
 		Description:       opt.BastionInstanceName,
@@ -178,6 +182,10 @@ func ensureComputeInstance(logger logr.Logger, openstackClientFactory openstackc
 	networkInfo, err := networkingClient.GetNetworkByName(opt.ShootName)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(networkInfo) == 0 {
+		return nil, errors.New("networkInfo must not empty")
 	}
 
 	createOpts := servers.CreateOpts{
@@ -279,8 +287,12 @@ func ensureAssociateFIPWithInstance(openstackClientFactory openstackclient.Facto
 
 func ensureSecurityGroupRules(openstackClientFactory openstackclient.Factory, opt *Options, secGroupID string) error {
 	securityGroups, err := getSecurityGroupId(openstackClientFactory, opt.ShootName)
-	if err != nil || len(securityGroups) == 0 {
+	if err != nil {
 		return err
+	}
+
+	if len(securityGroups) == 0 {
+		return errors.New("securityGroups must not empty")
 	}
 
 	rules := []rules.CreateOpts{IngressAllowSSH(opt, secGroupID), EgressAllowSSHToWorker(opt, secGroupID, securityGroups[0].ID)}
