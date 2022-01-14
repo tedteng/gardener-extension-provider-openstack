@@ -18,10 +18,12 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net"
 
 	openstackapi "github.com/gardener/gardener-extension-provider-openstack/pkg/apis/openstack"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/rules"
 
 	"github.com/gardener/gardener/extensions/pkg/controller"
 	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
@@ -53,6 +55,8 @@ type Options struct {
 	ImageRef            string
 	FloatingPoolName    string
 	CIDRs               []string
+	EtherType           rules.RuleEtherType
+	EtherIpAddress      string
 }
 
 // DetermineOptions determines the required information that are required to reconcile a Bastion on Openstack. This
@@ -71,6 +75,11 @@ func DetermineOptions(bastion *extensionsv1alpha1.Bastion, cluster *controller.C
 		Name:      v1beta1constants.SecretNameCloudProvider,
 	}
 
+	etherType, ip, err := ingressPermissions(bastion)
+	if err != nil {
+		return nil, errors.New("ingressPermissions error")
+	}
+
 	infrastructureConfig := &openstackapi.InfrastructureConfig{}
 	err = json.Unmarshal(cluster.Shoot.Spec.Provider.InfrastructureConfig.Raw, infrastructureConfig)
 	if err != nil {
@@ -87,6 +96,8 @@ func DetermineOptions(bastion *extensionsv1alpha1.Bastion, cluster *controller.C
 		UserData:            []byte(base64.StdEncoding.EncodeToString(bastion.Spec.UserData)),
 		ImageRef:            imageRef,
 		FloatingPoolName:    infrastructureConfig.FloatingPoolName,
+		EtherType:           etherType,
+		EtherIpAddress:      ip,
 	}, nil
 }
 
@@ -111,23 +122,25 @@ func generateBastionBaseResourceName(clusterName string, bastionName string) (st
 	return fmt.Sprintf("%s-bastion-%s", staticName, hash[:5]), nil
 }
 
-func ingressPermissions(bastion *extensionsv1alpha1.Bastion) ([]string, error) {
-	var cidrs []string
+func ingressPermissions(bastion *extensionsv1alpha1.Bastion) (rules.RuleEtherType, string, error) {
+	var etherType rules.RuleEtherType
+	var ipAddress string
 	for _, ingress := range bastion.Spec.Ingress {
 		cidr := ingress.IPBlock.CIDR
-		ip, ipNet, err := net.ParseCIDR(cidr)
+		ip, _, err := net.ParseCIDR(cidr)
 		if err != nil {
-			return nil, fmt.Errorf("invalid ingress CIDR %q: %w", cidr, err)
+			return "", "", fmt.Errorf("invalid ingress CIDR %q: %w", cidr, err)
 		}
-
-		normalisedCIDR := ipNet.String()
 
 		if ip.To4() != nil {
-			cidrs = append(cidrs, normalisedCIDR)
+			etherType = rules.EtherType4
+			ipAddress = "0.0.0.0/0"
+		} else if ip.To16() != nil {
+			etherType = rules.EtherType6
+			ipAddress = "::/0"
 		}
 	}
-
-	return cidrs, nil
+	return etherType, ipAddress, nil
 }
 
 // securityGroupName is Security Group resource name

@@ -19,16 +19,16 @@ import (
 )
 
 // IngressAllowSSH ingress allow ssh
-func IngressAllowSSH(opt *Options, secGroupID string) rules.CreateOpts {
+func IngressAllowSSH(opt *Options, etherType rules.RuleEtherType, secGroupID, cidr string) rules.CreateOpts {
 	return rules.CreateOpts{
 		Direction:      "ingress",
 		Description:    ingressAllowSSHResourceName(opt.BastionInstanceName),
 		PortRangeMin:   22,
-		EtherType:      rules.EtherType4,
+		EtherType:      etherType,
 		PortRangeMax:   22,
 		Protocol:       "tcp",
 		SecGroupID:     secGroupID,
-		RemoteIPPrefix: "0.0.0.0/0",
+		RemoteIPPrefix: cidr,
 	}
 }
 
