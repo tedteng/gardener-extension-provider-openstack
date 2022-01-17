@@ -157,3 +157,8 @@ func ingressAllowSSHResourceName(baseName string) string {
 func egressAllowOnlyResourceName(baseName string) string {
 	return fmt.Sprintf("%s-egress-worker", baseName)
 }
+
+// egressDenyAllResourceName is Firewall egress deny all rule name
+func egressDenyAllResourceName(baseName string) string {
+	return fmt.Sprintf("%s-deny-all", baseName)
+}
