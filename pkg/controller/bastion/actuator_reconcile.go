@@ -102,7 +102,7 @@ func (a *actuator) Reconcile(ctx context.Context, bastion *extensionsv1alpha1.Ba
 	}
 
 	if len(instances) == 0 {
-		return errors.New("instances must not empty")
+		return errors.New("instances must not be empty")
 	}
 
 	// check if the instance already exists and has an IP
@@ -146,7 +146,7 @@ func ensurePublicIPAddress(opt *Options, openstackClientFactory openstackclient.
 	}
 
 	if len(externalFipInfo) == 0 {
-		return nil, errors.New("externalFipInfo must not empty")
+		return nil, errors.New("externalFipInfo must not be empty")
 	}
 
 	createOpts := floatingips.CreateOpts{
@@ -169,7 +169,7 @@ func ensureComputeInstance(logger logr.Logger, openstackClientFactory openstackc
 	}
 
 	if len(instances) != 0 {
-		return &instances[0], err
+		return &instances[0], nil
 	}
 
 	logger.Info("Creating new bastion compute instance")
@@ -185,7 +185,7 @@ func ensureComputeInstance(logger logr.Logger, openstackClientFactory openstackc
 	}
 
 	if len(networkInfo) == 0 {
-		return nil, errors.New("networkInfo must not empty")
+		return nil, errors.New("networkInfo must not be empty")
 	}
 
 	createOpts := servers.CreateOpts{
@@ -282,16 +282,16 @@ func ensureAssociateFIPWithInstance(openstackClientFactory openstackclient.Facto
 }
 
 func ensureSecurityGroupRules(openstackClientFactory openstackclient.Factory, opt *Options, secGroupID string) error {
-	securityGroups, err := getSecurityGroupId(openstackClientFactory, opt.ShootName)
+	shootSecurityGroups, err := getSecurityGroupId(openstackClientFactory, opt.ShootName)
 	if err != nil {
 		return err
 	}
 
-	if len(securityGroups) == 0 {
-		return errors.New("securityGroups must not empty")
+	if len(shootSecurityGroups) == 0 {
+		return errors.New("shootSecurityGroups must not be empty")
 	}
 
-	rules := []rules.CreateOpts{IngressAllowSSH(opt, opt.EtherType, secGroupID, opt.EtherIpAddress), EgressAllowSSHToWorker(opt, secGroupID, securityGroups[0].ID)}
+	rules := []rules.CreateOpts{IngressAllowSSH(opt, opt.EtherType, secGroupID, opt.EtherIpAddress), EgressAllowSSHToWorker(opt, secGroupID, shootSecurityGroups[0].ID)}
 	for _, item := range rules {
 		if err := createSecurityGroupRuleIfNotExist(openstackClientFactory, item); err != nil {
 			return err
