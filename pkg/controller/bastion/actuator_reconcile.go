@@ -24,8 +24,9 @@ import (
 	openstackclient "github.com/gardener/gardener-extension-provider-openstack/pkg/openstack/client"
 
 	"github.com/gardener/gardener/extensions/pkg/controller"
-	ctrlerror "github.com/gardener/gardener/extensions/pkg/controller/error"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
+	"github.com/gardener/gardener/pkg/controllerutils"
+	ctrlerror "github.com/gardener/gardener/pkg/controllerutils/reconciler"
 	"github.com/go-logr/logr"
 	"github.com/gophercloud/gophercloud"
 	computefip "github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/floatingips"
@@ -122,7 +123,7 @@ func (a *actuator) Reconcile(ctx context.Context, bastion *extensionsv1alpha1.Ba
 
 	// once a public endpoint is available, publish the endpoint on the
 	// Bastion resource to notify upstream about the ready instance
-	return controller.TryUpdateStatus(ctx, retry.DefaultBackoff, a.client, bastion, func() error {
+	return controllerutils.TryUpdateStatus(ctx, retry.DefaultBackoff, a.client, bastion, func() error {
 		bastion.Status.Ingress = *endpoints.public
 		return nil
 	})
