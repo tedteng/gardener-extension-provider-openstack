@@ -53,7 +53,7 @@ func EgressDenyAll(opt *Options, secGroupID string) rules.CreateOpts {
 		Description:  egressDenyAllResourceName(opt.BastionInstanceName),
 		PortRangeMin: 1,
 		PortRangeMax: 65535,
-		Protocol:     rules.DirIngress,
+		Protocol:     "tcp",
 		EtherType:    rules.EtherType4,
 		SecGroupID:   secGroupID,
 	}
