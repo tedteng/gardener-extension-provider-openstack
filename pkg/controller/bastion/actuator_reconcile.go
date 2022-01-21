@@ -313,7 +313,7 @@ func ensureSecurityGroupRules(openstackClientFactory openstackclient.Factory, ba
 		}
 	}
 
-	// create ingress and overwrite egress rules
+	// create ingress rules
 	for _, etherItem := range ethers {
 		rules := []rules.CreateOpts{IngressAllowSSH(opt, etherItem.EtherType, secGroupID, strings.Join(etherItem.CIDRs, ","))}
 		for _, item := range rules {
