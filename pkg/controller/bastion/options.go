@@ -55,6 +55,7 @@ type Options struct {
 	FloatingPoolName    string
 }
 
+// EtherCard contains EtherType and CIDR information use for ingress rule
 type EtherCard struct {
 	EtherType rules.RuleEtherType
 	CIDRs     []string
@@ -147,14 +148,4 @@ func securityGroupName(baseName string) string {
 // ingressAllowSSHResourceName is Firewall ingress allow SSH rule resource name
 func ingressAllowSSHResourceName(baseName string) string {
 	return fmt.Sprintf("%s-allow-ssh", baseName)
-}
-
-// egressAllowOnlyResourceName is Firewall egress allow only worker node rule resource name
-func egressAllowOnlyResourceName(baseName string) string {
-	return fmt.Sprintf("%s-egress-worker", baseName)
-}
-
-// egressDenyAllResourceName is Firewall egress deny all rule name
-func egressDenyAllResourceName(baseName string) string {
-	return fmt.Sprintf("%s-deny-all", baseName)
 }

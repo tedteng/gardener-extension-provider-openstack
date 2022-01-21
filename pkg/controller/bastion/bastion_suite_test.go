@@ -81,8 +81,8 @@ var _ = Describe("Bastion", func() {
 			}
 			ethers, err := ingressPermissions(bastion)
 			Expect(err).To(Not(HaveOccurred()))
-			Expect(ethers[0].EtherType).To(Equal("IPv4"))
-			Expect(ethers[0].CIDRs).To(Equal("0.0.0.0/0"))
+			Expect(string(ethers[0].EtherType)).To(Equal("IPv4"))
+			Expect(ethers[0].CIDRs[0]).To(Equal("0.0.0.0/0"))
 		})
 		It("Should return a string array with ipV6 normalized addresses", func() {
 			bastion.Spec.Ingress = []extensionsv1alpha1.BastionIngressPolicy{
@@ -92,8 +92,8 @@ var _ = Describe("Bastion", func() {
 			}
 			ethers, err := ingressPermissions(bastion)
 			Expect(err).To(Not(HaveOccurred()))
-			Expect(ethers[0].EtherType).To(Equal("IPv6"))
-			Expect(ethers[0].CIDRs).To(Equal("::/0"))
+			Expect(string(ethers[0].EtherType)).To(Equal("IPv6"))
+			Expect(ethers[0].CIDRs[0]).To(Equal("::/0"))
 		})
 	})
 
@@ -131,7 +131,6 @@ var _ = Describe("Bastion", func() {
 
 			Entry("security group name", securityGroupName(baseName), "clusterName-LetsExceed63LenLimit0-bastion-139c4-sg"),
 			Entry("ingress allow ssh resource name", ingressAllowSSHResourceName(baseName), "clusterName-LetsExceed63LenLimit0-bastion-139c4-allow-ssh"),
-			Entry("egress allow only resource name", egressAllowOnlyResourceName(baseName), "clusterName-LetsExceed63LenLimit0-bastion-139c4-egress-worker"),
 		)
 	})
 
