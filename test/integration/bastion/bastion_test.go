@@ -568,7 +568,6 @@ func verifyCreation(openstackClient *OpenstackClient, options *bastionctrl.Optio
 
 	By("checkNSGExists")
 	checkSecurityRuleslExists(openstackClient, bastionctrl.IngressAllowSSH(options, "", "", "").Description)
-	checkSecurityRuleslExists(openstackClient, bastionctrl.EgressAllowSSHToWorker(options, "", "").Description)
 
 	By("checking bastion instance")
 	allPages, err = servers.List(openstackClient.ComputeClient, servers.ListOpts{Name: options.BastionInstanceName}).AllPages()

@@ -132,6 +132,11 @@ func (c *NetworkingClient) CreateRule(createOpts rules.CreateOpts) (*rules.SecGr
 	return rules.Create(c.client, createOpts).Extract()
 }
 
+// DeleteRule delete security group rule
+func (c *NetworkingClient) DeleteRule(ruleID string) error {
+	return rules.Delete(c.client, ruleID).ExtractErr()
+}
+
 // CreateSecurityGroup create a security group
 func (c *NetworkingClient) CreateSecurityGroup(listOpts groups.CreateOpts) (*groups.SecGroup, error) {
 	return groups.Create(c.client, listOpts).Extract()

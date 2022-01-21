@@ -18,6 +18,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/gardener/gardener-extension-provider-openstack/pkg/openstack"
@@ -76,7 +77,7 @@ func (a *actuator) Reconcile(ctx context.Context, bastion *extensionsv1alpha1.Ba
 		return err
 	}
 
-	err = ensureSecurityGroupRules(openstackClientFactory, opt, securityGroup.ID)
+	err = ensureSecurityGroupRules(openstackClientFactory, bastion, opt, securityGroup.ID)
 	if err != nil {
 		return err
 	}
@@ -282,7 +283,12 @@ func ensureAssociateFIPWithInstance(openstackClientFactory openstackclient.Facto
 	return nil
 }
 
-func ensureSecurityGroupRules(openstackClientFactory openstackclient.Factory, opt *Options, secGroupID string) error {
+func ensureSecurityGroupRules(openstackClientFactory openstackclient.Factory, bastion *extensionsv1alpha1.Bastion, opt *Options, secGroupID string) error {
+	ethers, err := ingressPermissions(bastion)
+	if err != nil {
+		return errors.New("ingressPermissions error")
+	}
+
 	shootSecurityGroups, err := getSecurityGroupId(openstackClientFactory, opt.ShootName)
 	if err != nil {
 		return err
@@ -292,12 +298,31 @@ func ensureSecurityGroupRules(openstackClientFactory openstackclient.Factory, op
 		return errors.New("shootSecurityGroups must not be empty")
 	}
 
-	rules := []rules.CreateOpts{IngressAllowSSH(opt, opt.EtherType, secGroupID, opt.EtherIpAddress), EgressAllowSSHToWorker(opt, secGroupID, shootSecurityGroups[0].ID), EgressDenyAll(opt, secGroupID)}
-	for _, item := range rules {
-		if err := createSecurityGroupRuleIfNotExist(openstackClientFactory, item); err != nil {
-			return err
+	// remove all exist ingress allow ssh rules for patch purpose
+	ingressSSHRules, err := getRulebyName(openstackClientFactory, ingressAllowSSHResourceName(opt.BastionInstanceName))
+	if openstackclient.IgnoreNotFoundError(err) != nil {
+		return err
+	}
+
+	if len(ingressSSHRules) != 0 {
+		for _, rule := range ingressSSHRules {
+			err = deleteRule(openstackClientFactory, rule.ID)
+			if err != nil {
+				return fmt.Errorf("failed to delete security group rule %s-%s", rule.Description, rule.ID)
+			}
 		}
 	}
+
+	// create ingress and overwrite egress rules
+	for _, etherItem := range ethers {
+		rules := []rules.CreateOpts{IngressAllowSSH(opt, etherItem.EtherType, secGroupID, strings.Join(etherItem.CIDRs, ","))}
+		for _, item := range rules {
+			if err := createSecurityGroupRuleIfNotExist(openstackClientFactory, item); err != nil {
+				return err
+			}
+		}
+	}
+
 	return nil
 }
 

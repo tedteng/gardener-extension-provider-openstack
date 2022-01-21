@@ -112,6 +112,9 @@ type Networking interface {
 	GetSecurityGroupbyName(name string) ([]groups.SecGroup, error)
 	// Security Group rules
 	CreateRule(createOpts rules.CreateOpts) (*rules.SecGroupRule, error)
+	ListRules(listOpts rules.ListOpts) ([]rules.SecGroupRule, error)
+	GetRulebyName(name string) ([]rules.SecGroupRule, error)
+	DeleteRule(ruleID string) error
 }
 
 // FactoryFactory creates instances of Factory.

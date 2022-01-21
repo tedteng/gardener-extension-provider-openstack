@@ -194,3 +194,19 @@ func createRules(openstackClientFactory openstackclient.Factory, createOpts rule
 	}
 	return client.CreateRule(createOpts)
 }
+
+func getRulebyName(openstackClientFactory openstackclient.Factory, name string) ([]rules.SecGroupRule, error) {
+	client, err := openstackClientFactory.Networking()
+	if err != nil {
+		return nil, err
+	}
+	return client.GetRulebyName(name)
+}
+
+func deleteRule(openstackClientFactory openstackclient.Factory, ruleID string) error {
+	client, err := openstackClientFactory.Networking()
+	if err != nil {
+		return err
+	}
+	return client.DeleteRule(ruleID)
+}

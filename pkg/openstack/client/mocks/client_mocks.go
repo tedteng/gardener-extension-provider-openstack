@@ -460,6 +460,20 @@ func (mr *MockNetworkingMockRecorder) DeleteFloatingIP(arg0 interface{}) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteFloatingIP", reflect.TypeOf((*MockNetworking)(nil).DeleteFloatingIP), arg0)
 }
 
+// DeleteRule mocks base method.
+func (m *MockNetworking) DeleteRule(arg0 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteRule", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteRule indicates an expected call of DeleteRule.
+func (mr *MockNetworkingMockRecorder) DeleteRule(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteRule", reflect.TypeOf((*MockNetworking)(nil).DeleteRule), arg0)
+}
+
 // DeleteSecurityGroup mocks base method.
 func (m *MockNetworking) DeleteSecurityGroup(arg0 string) error {
 	m.ctrl.T.Helper()
@@ -534,6 +548,21 @@ func (mr *MockNetworkingMockRecorder) GetNetworkByName(arg0 interface{}) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNetworkByName", reflect.TypeOf((*MockNetworking)(nil).GetNetworkByName), arg0)
 }
 
+// GetRulebyName mocks base method.
+func (m *MockNetworking) GetRulebyName(arg0 string) ([]rules.SecGroupRule, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetRulebyName", arg0)
+	ret0, _ := ret[0].([]rules.SecGroupRule)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetRulebyName indicates an expected call of GetRulebyName.
+func (mr *MockNetworkingMockRecorder) GetRulebyName(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRulebyName", reflect.TypeOf((*MockNetworking)(nil).GetRulebyName), arg0)
+}
+
 // GetSecurityGroupbyName mocks base method.
 func (m *MockNetworking) GetSecurityGroupbyName(arg0 string) ([]groups.SecGroup, error) {
 	m.ctrl.T.Helper()
@@ -577,6 +606,21 @@ func (m *MockNetworking) ListNetwork(arg0 networks.ListOpts) ([]networks.Network
 func (mr *MockNetworkingMockRecorder) ListNetwork(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListNetwork", reflect.TypeOf((*MockNetworking)(nil).ListNetwork), arg0)
+}
+
+// ListRules mocks base method.
+func (m *MockNetworking) ListRules(arg0 rules.ListOpts) ([]rules.SecGroupRule, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListRules", arg0)
+	ret0, _ := ret[0].([]rules.SecGroupRule)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListRules indicates an expected call of ListRules.
+func (mr *MockNetworkingMockRecorder) ListRules(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListRules", reflect.TypeOf((*MockNetworking)(nil).ListRules), arg0)
 }
 
 // ListSecurityGroup mocks base method.
