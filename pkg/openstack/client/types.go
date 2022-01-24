@@ -83,7 +83,7 @@ type Compute interface {
 	ListServerGroups() ([]servergroups.ServerGroup, error)
 	FindServersByName(name string) ([]servers.Server, error)
 	AssociateFIPWithInstance(serverID string, associateOpts computefip.AssociateOpts) error
-	FindFloatingIDbyInstnaceID(id string) (string, error)
+	FindFloatingIDByInstnaceID(id string) (string, error)
 }
 
 // DNS describes the operations of a client interacting with OpenStack's DNS service.
@@ -113,7 +113,7 @@ type Networking interface {
 	// Security Group rules
 	CreateRule(createOpts rules.CreateOpts) (*rules.SecGroupRule, error)
 	ListRules(listOpts rules.ListOpts) ([]rules.SecGroupRule, error)
-	GetRulebyName(name string) ([]rules.SecGroupRule, error)
+	GetRuleByName(name, secGroupID string) ([]rules.SecGroupRule, error)
 	DeleteRule(ruleID string) error
 }
 

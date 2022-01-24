@@ -49,16 +49,9 @@ type Options struct {
 	ShootName           string
 	SecretReference     corev1.SecretReference
 	SecurityGroup       string
-	SecurityGroupID     string
 	UserData            []byte
 	ImageRef            string
 	FloatingPoolName    string
-}
-
-// EtherCard contains EtherType and CIDR information use for ingress rule
-type EtherCard struct {
-	EtherType rules.RuleEtherType
-	CIDRs     []string
 }
 
 // DetermineOptions determines the required information that are required to reconcile a Bastion on Openstack. This
@@ -117,10 +110,18 @@ func generateBastionBaseResourceName(clusterName string, bastionName string) (st
 	return fmt.Sprintf("%s-bastion-%s", staticName, hash[:5]), nil
 }
 
-func ingressPermissions(bastion *extensionsv1alpha1.Bastion) ([]EtherCard, error) {
-	var cidrs []string
-	n := EtherCard{}
-	ethers := []EtherCard{}
+// IngressPermission hold the IPv4 and IPv6 ranges that should be allowed to access the bastion.
+type IngressPermission struct {
+	// EtherType describes the rules.RuleEtherType of the CIDR.
+	EtherType rules.RuleEtherType
+
+	// CIDR holds the IPv4 or IPv6 range, depending on EtherType.
+	CIDR string
+}
+
+func ingressPermissions(bastion *extensionsv1alpha1.Bastion) ([]IngressPermission, error) {
+	var perms []IngressPermission
+
 	for _, ingress := range bastion.Spec.Ingress {
 		cidr := ingress.IPBlock.CIDR
 		ip, ipNet, err := net.ParseCIDR(cidr)
@@ -131,13 +132,13 @@ func ingressPermissions(bastion *extensionsv1alpha1.Bastion) ([]EtherCard, error
 		normalisedCIDR := ipNet.String()
 
 		if ip.To4() != nil {
-			n = EtherCard{EtherType: rules.EtherType4, CIDRs: append(cidrs, normalisedCIDR)}
+			perms = append(perms, IngressPermission{EtherType: rules.EtherType4, CIDR: normalisedCIDR})
 		} else if ip.To16() != nil {
-			n = EtherCard{EtherType: rules.EtherType6, CIDRs: append(cidrs, normalisedCIDR)}
+			perms = append(perms, IngressPermission{EtherType: rules.EtherType6, CIDR: normalisedCIDR})
 		}
-		ethers = append(ethers, n)
+
 	}
-	return ethers, nil
+	return perms, nil
 }
 
 // securityGroupName is Security Group resource name

@@ -119,10 +119,11 @@ func (c *NetworkingClient) ListRules(listOpts rules.ListOpts) ([]rules.SecGroupR
 	return rules.ExtractRules(allPages)
 }
 
-// GetRulebyName returns rule info by rule name
-func (c *NetworkingClient) GetRulebyName(name string) ([]rules.SecGroupRule, error) {
+// GetRuleByName returns rule info by rule name
+func (c *NetworkingClient) GetRuleByName(name, secGroupID string) ([]rules.SecGroupRule, error) {
 	listOpts := rules.ListOpts{
 		Description: name,
+		SecGroupID:  secGroupID,
 	}
 	return c.ListRules(listOpts)
 }

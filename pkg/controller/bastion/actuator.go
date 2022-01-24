@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	openstackclient "github.com/gardener/gardener-extension-provider-openstack/pkg/openstack/client"
+	"k8s.io/apimachinery/pkg/util/sets"
 
 	"github.com/gardener/gardener/extensions/pkg/controller/bastion"
 	"github.com/go-logr/logr"
@@ -144,7 +145,7 @@ func findFloatingIDByInstanceID(openstackClientFactory openstackclient.Factory, 
 	if err != nil {
 		return "", err
 	}
-	return client.FindFloatingIDbyInstnaceID(id)
+	return client.FindFloatingIDByInstnaceID(id)
 }
 
 func getExternalNetworkInfoByName(openstackClientFactory openstackclient.Factory, name string) ([]networks.Network, error) {
@@ -195,12 +196,12 @@ func createRules(openstackClientFactory openstackclient.Factory, createOpts rule
 	return client.CreateRule(createOpts)
 }
 
-func getRulebyName(openstackClientFactory openstackclient.Factory, name string) ([]rules.SecGroupRule, error) {
+func getRuleByName(openstackClientFactory openstackclient.Factory, name, secGroupID string) ([]rules.SecGroupRule, error) {
 	client, err := openstackClientFactory.Networking()
 	if err != nil {
 		return nil, err
 	}
-	return client.GetRulebyName(name)
+	return client.GetRuleByName(name, secGroupID)
 }
 
 func deleteRule(openstackClientFactory openstackclient.Factory, ruleID string) error {
@@ -209,4 +210,12 @@ func deleteRule(openstackClientFactory openstackclient.Factory, ruleID string) e
 		return err
 	}
 	return client.DeleteRule(ruleID)
+}
+
+func getIpRangeCidrs(ipRanges []IngressPermission) sets.String {
+	result := sets.NewString()
+	for _, ipRange := range ipRanges {
+		result.Insert(ipRange.CIDR)
+	}
+	return result
 }

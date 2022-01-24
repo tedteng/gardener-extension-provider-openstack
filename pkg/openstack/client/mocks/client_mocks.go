@@ -252,19 +252,19 @@ func (mr *MockComputeMockRecorder) DeleteServerGroup(arg0 interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteServerGroup", reflect.TypeOf((*MockCompute)(nil).DeleteServerGroup), arg0)
 }
 
-// FindFloatingIDbyInstnaceID mocks base method.
-func (m *MockCompute) FindFloatingIDbyInstnaceID(arg0 string) (string, error) {
+// FindFloatingIDByInstnaceID mocks base method.
+func (m *MockCompute) FindFloatingIDByInstnaceID(arg0 string) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindFloatingIDbyInstnaceID", arg0)
+	ret := m.ctrl.Call(m, "FindFloatingIDByInstnaceID", arg0)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// FindFloatingIDbyInstnaceID indicates an expected call of FindFloatingIDbyInstnaceID.
-func (mr *MockComputeMockRecorder) FindFloatingIDbyInstnaceID(arg0 interface{}) *gomock.Call {
+// FindFloatingIDByInstnaceID indicates an expected call of FindFloatingIDByInstnaceID.
+func (mr *MockComputeMockRecorder) FindFloatingIDByInstnaceID(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindFloatingIDbyInstnaceID", reflect.TypeOf((*MockCompute)(nil).FindFloatingIDbyInstnaceID), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindFloatingIDByInstnaceID", reflect.TypeOf((*MockCompute)(nil).FindFloatingIDByInstnaceID), arg0)
 }
 
 // FindServersByName mocks base method.
@@ -548,19 +548,19 @@ func (mr *MockNetworkingMockRecorder) GetNetworkByName(arg0 interface{}) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNetworkByName", reflect.TypeOf((*MockNetworking)(nil).GetNetworkByName), arg0)
 }
 
-// GetRulebyName mocks base method.
-func (m *MockNetworking) GetRulebyName(arg0 string) ([]rules.SecGroupRule, error) {
+// GetRuleByName mocks base method.
+func (m *MockNetworking) GetRuleByName(arg0, arg1 string) ([]rules.SecGroupRule, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetRulebyName", arg0)
+	ret := m.ctrl.Call(m, "GetRuleByName", arg0, arg1)
 	ret0, _ := ret[0].([]rules.SecGroupRule)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetRulebyName indicates an expected call of GetRulebyName.
-func (mr *MockNetworkingMockRecorder) GetRulebyName(arg0 interface{}) *gomock.Call {
+// GetRuleByName indicates an expected call of GetRuleByName.
+func (mr *MockNetworkingMockRecorder) GetRuleByName(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRulebyName", reflect.TypeOf((*MockNetworking)(nil).GetRulebyName), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRuleByName", reflect.TypeOf((*MockNetworking)(nil).GetRuleByName), arg0, arg1)
 }
 
 // GetSecurityGroupbyName mocks base method.

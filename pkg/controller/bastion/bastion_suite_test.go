@@ -82,7 +82,7 @@ var _ = Describe("Bastion", func() {
 			ethers, err := ingressPermissions(bastion)
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(string(ethers[0].EtherType)).To(Equal("IPv4"))
-			Expect(ethers[0].CIDRs[0]).To(Equal("0.0.0.0/0"))
+			Expect(ethers[0].CIDR).To(Equal("0.0.0.0/0"))
 		})
 		It("Should return a string array with ipV6 normalized addresses", func() {
 			bastion.Spec.Ingress = []extensionsv1alpha1.BastionIngressPolicy{
@@ -93,7 +93,7 @@ var _ = Describe("Bastion", func() {
 			ethers, err := ingressPermissions(bastion)
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(string(ethers[0].EtherType)).To(Equal("IPv6"))
-			Expect(ethers[0].CIDRs[0]).To(Equal("::/0"))
+			Expect(ethers[0].CIDR).To(Equal("::/0"))
 		})
 	})
 
