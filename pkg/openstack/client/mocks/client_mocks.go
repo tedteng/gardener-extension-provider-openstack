@@ -252,19 +252,19 @@ func (mr *MockComputeMockRecorder) DeleteServerGroup(arg0 interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteServerGroup", reflect.TypeOf((*MockCompute)(nil).DeleteServerGroup), arg0)
 }
 
-// FindFloatingIDByInstnaceID mocks base method.
-func (m *MockCompute) FindFloatingIDByInstnaceID(arg0 string) (string, error) {
+// FindFloatingIDByInstanceID mocks base method.
+func (m *MockCompute) FindFloatingIDByInstanceID(arg0 string) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindFloatingIDByInstnaceID", arg0)
+	ret := m.ctrl.Call(m, "FindFloatingIDByInstanceID", arg0)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// FindFloatingIDByInstnaceID indicates an expected call of FindFloatingIDByInstnaceID.
-func (mr *MockComputeMockRecorder) FindFloatingIDByInstnaceID(arg0 interface{}) *gomock.Call {
+// FindFloatingIDByInstanceID indicates an expected call of FindFloatingIDByInstanceID.
+func (mr *MockComputeMockRecorder) FindFloatingIDByInstanceID(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindFloatingIDByInstnaceID", reflect.TypeOf((*MockCompute)(nil).FindFloatingIDByInstnaceID), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindFloatingIDByInstanceID", reflect.TypeOf((*MockCompute)(nil).FindFloatingIDByInstanceID), arg0)
 }
 
 // FindServersByName mocks base method.

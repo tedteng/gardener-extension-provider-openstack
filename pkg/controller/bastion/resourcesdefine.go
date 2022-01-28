@@ -32,4 +32,16 @@ func IngressAllowSSH(opt *Options, etherType rules.RuleEtherType, secGroupID, ci
 	}
 }
 
-// Security rules are always permissive; unable to create rules for deny access purpose.
+// EgressAllowSSHToWorker egress allow ssh to worker
+func EgressAllowSSHToWorker(opt *Options, secGroupID string, remoteGroupID string) rules.CreateOpts {
+	return rules.CreateOpts{
+		Direction:     "egress",
+		Description:   egressAllowOnlyResourceName(opt.BastionInstanceName),
+		PortRangeMin:  SSHPort,
+		EtherType:     rules.EtherType4,
+		PortRangeMax:  SSHPort,
+		Protocol:      "tcp",
+		SecGroupID:    secGroupID,
+		RemoteGroupID: remoteGroupID,
+	}
+}

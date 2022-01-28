@@ -145,7 +145,7 @@ func findFloatingIDByInstanceID(openstackClientFactory openstackclient.Factory, 
 	if err != nil {
 		return "", err
 	}
-	return client.FindFloatingIDByInstnaceID(id)
+	return client.FindFloatingIDByInstanceID(id)
 }
 
 func getExternalNetworkInfoByName(openstackClientFactory openstackclient.Factory, name string) ([]networks.Network, error) {

@@ -150,3 +150,8 @@ func securityGroupName(baseName string) string {
 func ingressAllowSSHResourceName(baseName string) string {
 	return fmt.Sprintf("%s-allow-ssh", baseName)
 }
+
+// egressAllowOnlyResourceName is Security group egress allow only rule name
+func egressAllowOnlyResourceName(baseName string) string {
+	return fmt.Sprintf("%s-egress-worker", baseName)
+}

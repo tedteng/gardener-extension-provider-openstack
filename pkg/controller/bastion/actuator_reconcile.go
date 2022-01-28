@@ -71,7 +71,7 @@ func (a *actuator) Reconcile(ctx context.Context, bastion *extensionsv1alpha1.Ba
 		return fmt.Errorf("could not create Openstack client factory: %w", err)
 	}
 
-	securityGroup, err := ensureSecurityGroup(openstackClientFactory, opt)
+	securityGroup, err := ensureEmptySecurityGroup(openstackClientFactory, opt)
 	if err != nil {
 		return err
 	}
@@ -288,15 +288,14 @@ func ensureSecurityGroupRules(openstackClientFactory openstackclient.Factory, ba
 		return err
 	}
 
-	// depend on whether need to add EgressAllowSSHToWorker rules will check it later
-	// shootSecurityGroups, err := getSecurityGroupId(openstackClientFactory, opt.ShootName)
-	// if err != nil {
-	// 	return err
-	// }
+	shootSecurityGroups, err := getSecurityGroupId(openstackClientFactory, opt.ShootName)
+	if err != nil {
+		return err
+	}
 
-	// if len(shootSecurityGroups) == 0 {
-	// 	return errors.New("shootSecurityGroups must not be empty")
-	// }
+	if len(shootSecurityGroups) == 0 {
+		return errors.New("shootSecurityGroups must not be empty")
+	}
 
 	// remove ingress allow ssh rules if not exist from bastion yaml
 	ipRangeCiders := getIpRangeCidrs(ethers)
@@ -318,7 +317,7 @@ func ensureSecurityGroupRules(openstackClientFactory openstackclient.Factory, ba
 
 	// create ingress rules
 	for _, etherItem := range ethers {
-		rules := []rules.CreateOpts{IngressAllowSSH(opt, etherItem.EtherType, secGroupID, etherItem.CIDR)}
+		rules := []rules.CreateOpts{IngressAllowSSH(opt, etherItem.EtherType, secGroupID, etherItem.CIDR), EgressAllowSSHToWorker(opt, secGroupID, shootSecurityGroups[0].ID)}
 		for _, item := range rules {
 			if err := createSecurityGroupRuleIfNotExist(openstackClientFactory, item); err != nil {
 				return err
@@ -340,7 +339,7 @@ func createSecurityGroupRuleIfNotExist(openstackClientFactory openstackclient.Fa
 	return nil
 }
 
-func ensureSecurityGroup(openstackClientFactory openstackclient.Factory, opt *Options) (groups.SecGroup, error) {
+func ensureEmptySecurityGroup(openstackClientFactory openstackclient.Factory, opt *Options) (groups.SecGroup, error) {
 	securityGroups, err := getSecurityGroupId(openstackClientFactory, opt.SecurityGroup)
 	if err != nil {
 		return groups.SecGroup{}, err
@@ -356,6 +355,15 @@ func ensureSecurityGroup(openstackClientFactory openstackclient.Factory, opt *Op
 	})
 	if err != nil {
 		return groups.SecGroup{}, err
+	}
+
+	if len(result.Rules) != 0 {
+		for _, rule := range result.Rules {
+			err = deleteRule(openstackClientFactory, rule.ID)
+			if err != nil {
+				return groups.SecGroup{}, fmt.Errorf("failed to delete default rules: %w", err)
+			}
+		}
 	}
 
 	logger.Info("Security Group created", "security group", result.Name)

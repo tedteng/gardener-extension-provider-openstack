@@ -109,8 +109,8 @@ func (c *ComputeClient) AssociateFIPWithInstance(serverID string, associateOpts 
 	return floatingips.AssociateInstance(c.client, serverID, associateOpts).ExtractErr()
 }
 
-// FindFloatingIDByInstnaceID find floating id by instance id
-func (c *ComputeClient) FindFloatingIDByInstnaceID(id string) (string, error) {
+// FindFloatingIDByInstanceID find floating id by instance id
+func (c *ComputeClient) FindFloatingIDByInstanceID(id string) (string, error) {
 	allPages, err := floatingips.List(c.client).AllPages()
 	if err != nil {
 		return "", err

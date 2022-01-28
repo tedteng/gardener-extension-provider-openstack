@@ -83,7 +83,7 @@ type Compute interface {
 	ListServerGroups() ([]servergroups.ServerGroup, error)
 	FindServersByName(name string) ([]servers.Server, error)
 	AssociateFIPWithInstance(serverID string, associateOpts computefip.AssociateOpts) error
-	FindFloatingIDByInstnaceID(id string) (string, error)
+	FindFloatingIDByInstanceID(id string) (string, error)
 }
 
 // DNS describes the operations of a client interacting with OpenStack's DNS service.
