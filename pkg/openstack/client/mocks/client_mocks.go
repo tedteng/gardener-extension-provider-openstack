@@ -518,19 +518,19 @@ func (mr *MockNetworkingMockRecorder) GetExternalNetworkNames(arg0 interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetExternalNetworkNames", reflect.TypeOf((*MockNetworking)(nil).GetExternalNetworkNames), arg0)
 }
 
-// GetFipbyName mocks base method.
-func (m *MockNetworking) GetFipbyName(arg0 string) ([]floatingips0.FloatingIP, error) {
+// GetFipByName mocks base method.
+func (m *MockNetworking) GetFipByName(arg0 string) ([]floatingips0.FloatingIP, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetFipbyName", arg0)
+	ret := m.ctrl.Call(m, "GetFipByName", arg0)
 	ret0, _ := ret[0].([]floatingips0.FloatingIP)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetFipbyName indicates an expected call of GetFipbyName.
-func (mr *MockNetworkingMockRecorder) GetFipbyName(arg0 interface{}) *gomock.Call {
+// GetFipByName indicates an expected call of GetFipByName.
+func (mr *MockNetworkingMockRecorder) GetFipByName(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFipbyName", reflect.TypeOf((*MockNetworking)(nil).GetFipbyName), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFipByName", reflect.TypeOf((*MockNetworking)(nil).GetFipByName), arg0)
 }
 
 // GetNetworkByName mocks base method.

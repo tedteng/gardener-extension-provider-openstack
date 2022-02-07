@@ -97,8 +97,8 @@ func (c *NetworkingClient) ListFip(listOpts floatingips.ListOpts) ([]floatingips
 	return floatingips.ExtractFloatingIPs(allPages)
 }
 
-// GetFipbyName returns floating IP info by floatingip name
-func (c *NetworkingClient) GetFipbyName(name string) ([]floatingips.FloatingIP, error) {
+// GetFipByName returns floating IP info by floatingip name
+func (c *NetworkingClient) GetFipByName(name string) ([]floatingips.FloatingIP, error) {
 	listOpts := floatingips.ListOpts{
 		Description: name,
 	}

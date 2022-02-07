@@ -104,7 +104,7 @@ type Networking interface {
 	CreateFloatingIP(createOpts floatingips.CreateOpts) (*floatingips.FloatingIP, error)
 	DeleteFloatingIP(id string) error
 	ListFip(listOpts floatingips.ListOpts) ([]floatingips.FloatingIP, error)
-	GetFipbyName(name string) ([]floatingips.FloatingIP, error)
+	GetFipByName(name string) ([]floatingips.FloatingIP, error)
 	// Security Group
 	CreateSecurityGroup(listOpts groups.CreateOpts) (*groups.SecGroup, error)
 	DeleteSecurityGroup(groupID string) error

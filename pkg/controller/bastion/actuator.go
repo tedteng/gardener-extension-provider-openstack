@@ -161,7 +161,7 @@ func getFipByName(openstackClientFactory openstackclient.Factory, name string) (
 	if err != nil {
 		return nil, err
 	}
-	return client.GetFipbyName(name)
+	return client.GetFipByName(name)
 }
 
 func createSecurityGroup(openstackClientFactory openstackclient.Factory, createOpts groups.CreateOpts) (*groups.SecGroup, error) {
