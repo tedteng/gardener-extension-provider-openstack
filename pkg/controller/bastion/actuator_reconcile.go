@@ -35,6 +35,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/rules"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -315,12 +316,34 @@ func ensureSecurityGroupRules(openstackClientFactory openstackclient.Factory, ba
 		}
 	}
 
-	// create ingress rules
+	// create bastion ingress and egress rules
 	for _, etherItem := range ethers {
 		rules := []rules.CreateOpts{IngressAllowSSH(opt, etherItem.EtherType, secGroupID, etherItem.CIDR), EgressAllowSSHToWorker(opt, secGroupID, shootSecurityGroups[0].ID)}
 		for _, item := range rules {
 			if err := createSecurityGroupRuleIfNotExist(openstackClientFactory, item); err != nil {
 				return err
+			}
+		}
+	}
+
+	// remove unwanted rules
+	allRules, err := getRuleBySecGroupID(openstackClientFactory, secGroupID)
+	if err != nil {
+		return err
+	}
+
+	result := sets.NewString()
+	for _, name := range []string{ingressAllowSSHResourceName(opt.BastionInstanceName), egressAllowOnlyResourceName(opt.BastionInstanceName)} {
+		result.Insert(name)
+	}
+
+	if len(allRules) != 0 {
+		for _, rule := range allRules {
+			if !result.Has(rule.Description) {
+				err = deleteRule(openstackClientFactory, rule.ID)
+				if err != nil {
+					return fmt.Errorf("failed to delete security group rule %s-%s", rule.Description, rule.ID)
+				}
 			}
 		}
 	}
@@ -355,15 +378,6 @@ func ensureEmptySecurityGroup(openstackClientFactory openstackclient.Factory, op
 	})
 	if err != nil {
 		return groups.SecGroup{}, err
-	}
-
-	if len(result.Rules) != 0 {
-		for _, rule := range result.Rules {
-			err = deleteRule(openstackClientFactory, rule.ID)
-			if err != nil {
-				return groups.SecGroup{}, fmt.Errorf("failed to delete default rules: %w", err)
-			}
-		}
 	}
 
 	logger.Info("Security Group created", "security group", result.Name)

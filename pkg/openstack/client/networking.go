@@ -128,6 +128,14 @@ func (c *NetworkingClient) GetRuleByName(name, secGroupID string) ([]rules.SecGr
 	return c.ListRules(listOpts)
 }
 
+// GetRuleBySecGroupID returns rule info by rule name
+func (c *NetworkingClient) GetRuleBySecGroupID(secGroupID string) ([]rules.SecGroupRule, error) {
+	listOpts := rules.ListOpts{
+		SecGroupID: secGroupID,
+	}
+	return c.ListRules(listOpts)
+}
+
 // CreateRule create security group rule
 func (c *NetworkingClient) CreateRule(createOpts rules.CreateOpts) (*rules.SecGroupRule, error) {
 	return rules.Create(c.client, createOpts).Extract()

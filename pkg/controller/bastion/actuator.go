@@ -204,6 +204,14 @@ func getRuleByName(openstackClientFactory openstackclient.Factory, name, secGrou
 	return client.GetRuleByName(name, secGroupID)
 }
 
+func getRuleBySecGroupID(openstackClientFactory openstackclient.Factory, secGroupID string) ([]rules.SecGroupRule, error) {
+	client, err := openstackClientFactory.Networking()
+	if err != nil {
+		return nil, err
+	}
+	return client.GetRuleBySecGroupID(secGroupID)
+}
+
 func deleteRule(openstackClientFactory openstackclient.Factory, ruleID string) error {
 	client, err := openstackClientFactory.Networking()
 	if err != nil {
