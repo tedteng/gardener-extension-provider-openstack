@@ -548,34 +548,34 @@ func (mr *MockNetworkingMockRecorder) GetNetworkByName(arg0 interface{}) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNetworkByName", reflect.TypeOf((*MockNetworking)(nil).GetNetworkByName), arg0)
 }
 
-// GetRuleByName mocks base method.
-func (m *MockNetworking) GetRuleByName(arg0, arg1 string) ([]rules.SecGroupRule, error) {
+// GetRulesByName mocks base method.
+func (m *MockNetworking) GetRulesByName(arg0, arg1 string) ([]rules.SecGroupRule, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetRuleByName", arg0, arg1)
+	ret := m.ctrl.Call(m, "GetRulesByName", arg0, arg1)
 	ret0, _ := ret[0].([]rules.SecGroupRule)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetRuleByName indicates an expected call of GetRuleByName.
-func (mr *MockNetworkingMockRecorder) GetRuleByName(arg0, arg1 interface{}) *gomock.Call {
+// GetRulesByName indicates an expected call of GetRulesByName.
+func (mr *MockNetworkingMockRecorder) GetRulesByName(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRuleByName", reflect.TypeOf((*MockNetworking)(nil).GetRuleByName), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRulesByName", reflect.TypeOf((*MockNetworking)(nil).GetRulesByName), arg0, arg1)
 }
 
-// GetRuleBySecGroupID mocks base method.
-func (m *MockNetworking) GetRuleBySecGroupID(arg0 string) ([]rules.SecGroupRule, error) {
+// GetRulesBySecurityGroupID mocks base method.
+func (m *MockNetworking) GetRulesBySecurityGroupID(arg0 string) ([]rules.SecGroupRule, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetRuleBySecGroupID", arg0)
+	ret := m.ctrl.Call(m, "GetRulesBySecurityGroupID", arg0)
 	ret0, _ := ret[0].([]rules.SecGroupRule)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetRuleBySecGroupID indicates an expected call of GetRuleBySecGroupID.
-func (mr *MockNetworkingMockRecorder) GetRuleBySecGroupID(arg0 interface{}) *gomock.Call {
+// GetRulesBySecurityGroupID indicates an expected call of GetRulesBySecurityGroupID.
+func (mr *MockNetworkingMockRecorder) GetRulesBySecurityGroupID(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRuleBySecGroupID", reflect.TypeOf((*MockNetworking)(nil).GetRuleBySecGroupID), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRulesBySecurityGroupID", reflect.TypeOf((*MockNetworking)(nil).GetRulesBySecurityGroupID), arg0)
 }
 
 // GetSecurityGroupbyName mocks base method.

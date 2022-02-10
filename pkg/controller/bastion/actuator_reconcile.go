@@ -300,7 +300,7 @@ func ensureSecurityGroupRules(openstackClientFactory openstackclient.Factory, ba
 
 	// remove ingress allow ssh rules if not exist from bastion yaml
 	ipRangeCiders := getIpRangeCidrs(ethers)
-	ingressSSHRules, err := getRuleByName(openstackClientFactory, ingressAllowSSHResourceName(opt.BastionInstanceName), secGroupID)
+	ingressSSHRules, err := getRulesByName(openstackClientFactory, ingressAllowSSHResourceName(opt.BastionInstanceName), secGroupID)
 	if openstackclient.IgnoreNotFoundError(err) != nil {
 		return err
 	}
@@ -327,7 +327,7 @@ func ensureSecurityGroupRules(openstackClientFactory openstackclient.Factory, ba
 	}
 
 	// remove unwanted rules
-	allRules, err := getRuleBySecGroupID(openstackClientFactory, secGroupID)
+	allRules, err := getRulesBySecurityGroupID(openstackClientFactory, secGroupID)
 	if err != nil {
 		return err
 	}

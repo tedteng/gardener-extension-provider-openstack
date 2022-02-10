@@ -113,8 +113,8 @@ type Networking interface {
 	// Security Group rules
 	CreateRule(createOpts rules.CreateOpts) (*rules.SecGroupRule, error)
 	ListRules(listOpts rules.ListOpts) ([]rules.SecGroupRule, error)
-	GetRuleByName(name, secGroupID string) ([]rules.SecGroupRule, error)
-	GetRuleBySecGroupID(secGroupID string) ([]rules.SecGroupRule, error)
+	GetRulesByName(name, secGroupID string) ([]rules.SecGroupRule, error)
+	GetRulesBySecurityGroupID(secGroupID string) ([]rules.SecGroupRule, error)
 	DeleteRule(ruleID string) error
 }
 
