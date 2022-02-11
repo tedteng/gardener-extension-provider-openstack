@@ -72,7 +72,7 @@ func (a *actuator) Reconcile(ctx context.Context, bastion *extensionsv1alpha1.Ba
 		return fmt.Errorf("could not create Openstack client factory: %w", err)
 	}
 
-	securityGroup, err := ensureEmptySecurityGroup(openstackClientFactory, opt)
+	securityGroup, err := ensureSecurityGroup(openstackClientFactory, opt)
 	if err != nil {
 		return err
 	}
@@ -307,7 +307,7 @@ func ensureSecurityGroupRules(openstackClientFactory openstackclient.Factory, ba
 
 	if len(ingressSSHRules) != 0 {
 		for _, rule := range ingressSSHRules {
-			if !ipRangeCiders.Has(rule.RemoteIPPrefix) {
+			if !ipPermissionsEqual(rule, IngressAllowSSH(opt, "", "", ""), ipRangeCiders) {
 				err = deleteRule(openstackClientFactory, rule.ID)
 				if err != nil {
 					return fmt.Errorf("failed to delete security group rule %s-%s", rule.Description, rule.ID)
@@ -362,7 +362,7 @@ func createSecurityGroupRuleIfNotExist(openstackClientFactory openstackclient.Fa
 	return nil
 }
 
-func ensureEmptySecurityGroup(openstackClientFactory openstackclient.Factory, opt *Options) (groups.SecGroup, error) {
+func ensureSecurityGroup(openstackClientFactory openstackclient.Factory, opt *Options) (groups.SecGroup, error) {
 	securityGroups, err := getSecurityGroupId(openstackClientFactory, opt.SecurityGroup)
 	if err != nil {
 		return groups.SecGroup{}, err

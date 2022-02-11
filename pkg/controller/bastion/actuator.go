@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	openstackclient "github.com/gardener/gardener-extension-provider-openstack/pkg/openstack/client"
+	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/util/sets"
 
 	"github.com/gardener/gardener/extensions/pkg/controller/bastion"
@@ -226,4 +227,23 @@ func getIpRangeCidrs(ipRanges []IngressPermission) sets.String {
 		result.Insert(ipRange.CIDR)
 	}
 	return result
+}
+
+func ipPermissionsEqual(a rules.SecGroupRule, resourcedefine rules.CreateOpts, ipRangeCiders sets.String) bool {
+	// ports must match
+	if !equality.Semantic.DeepEqual(a.PortRangeMin, resourcedefine.PortRangeMax) || !equality.Semantic.DeepEqual(a.PortRangeMin, resourcedefine.PortRangeMin) {
+		return false
+	}
+
+	// protocol must match
+	if !equality.Semantic.DeepEqual(a.Protocol, resourcedefine.Protocol) {
+		return false
+	}
+
+	// RemoteIPPrefix must allow in the bastion ingress ranges
+	if !ipRangeCiders.Has(a.RemoteIPPrefix) {
+		return false
+	}
+
+	return false
 }
