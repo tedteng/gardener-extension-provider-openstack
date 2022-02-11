@@ -35,7 +35,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/groups"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/security/rules"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -284,12 +284,12 @@ func ensureAssociateFIPWithInstance(openstackClientFactory openstackclient.Facto
 }
 
 func ensureSecurityGroupRules(openstackClientFactory openstackclient.Factory, bastion *extensionsv1alpha1.Bastion, opt *Options, secGroupID string) error {
-	ethers, err := ingressPermissions(bastion)
+	ingressPermissions, err := ingressPermissions(bastion)
 	if err != nil {
 		return err
 	}
 
-	shootSecurityGroups, err := getSecurityGroupId(openstackClientFactory, opt.ShootName)
+	shootSecurityGroups, err := getSecurityGroups(openstackClientFactory, opt.ShootName)
 	if err != nil {
 		return err
 	}
@@ -297,58 +297,113 @@ func ensureSecurityGroupRules(openstackClientFactory openstackclient.Factory, ba
 	if len(shootSecurityGroups) == 0 {
 		return errors.New("shootSecurityGroups must not be empty")
 	}
+	// The assumption is that the shoot only has one security group
+	shootSecurityGroupID := shootSecurityGroups[0].ID
 
-	// remove ingress allow ssh rules if not exist from bastion yaml
-	ipRangeCiders := getIpRangeCidrs(ethers)
-	ingressSSHRules, err := getRulesByName(openstackClientFactory, ingressAllowSSHResourceName(opt.BastionInstanceName), secGroupID)
-	if openstackclient.IgnoreNotFoundError(err) != nil {
-		return err
+	var wantedRules []rules.CreateOpts
+	for _, ingressPermission := range ingressPermissions {
+		wantedRules = append(wantedRules,
+			IngressAllowSSH(opt, ingressPermission.EtherType, secGroupID, ingressPermission.CIDR),
+			EgressAllowSSHToWorker(opt, secGroupID, shootSecurityGroupID),
+		)
 	}
 
-	if len(ingressSSHRules) != 0 {
-		for _, rule := range ingressSSHRules {
-			if !ipPermissionsEqual(rule, IngressAllowSSH(opt, "", "", ""), ipRangeCiders) {
-				err = deleteRule(openstackClientFactory, rule.ID)
-				if err != nil {
-					return fmt.Errorf("failed to delete security group rule %s-%s", rule.Description, rule.ID)
-				}
-			}
-		}
-	}
-
-	// create bastion ingress and egress rules
-	for _, etherItem := range ethers {
-		rules := []rules.CreateOpts{IngressAllowSSH(opt, etherItem.EtherType, secGroupID, etherItem.CIDR), EgressAllowSSHToWorker(opt, secGroupID, shootSecurityGroups[0].ID)}
-		for _, item := range rules {
-			if err := createSecurityGroupRuleIfNotExist(openstackClientFactory, item); err != nil {
-				return err
-			}
-		}
-	}
-
-	// remove unwanted rules
-	allRules, err := getRulesBySecurityGroupID(openstackClientFactory, secGroupID)
+	currentRules, err := listRules(openstackClientFactory, secGroupID)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to list rules: %w", err)
 	}
 
-	result := sets.NewString()
-	for _, name := range []string{ingressAllowSSHResourceName(opt.BastionInstanceName), egressAllowOnlyResourceName(opt.BastionInstanceName)} {
-		result.Insert(name)
+	rulesToAdd, rulesToDelete := rulesSymmetricDifference(wantedRules, currentRules)
+
+	for _, rule := range rulesToAdd {
+		if err := createSecurityGroupRuleIfNotExist(openstackClientFactory, rule); err != nil {
+			return fmt.Errorf("failed to add security group rule %s: %w", rule.Description, err)
+		}
 	}
 
-	if len(allRules) != 0 {
-		for _, rule := range allRules {
-			if !result.Has(rule.Description) {
-				err = deleteRule(openstackClientFactory, rule.ID)
-				if err != nil {
-					return fmt.Errorf("failed to delete security group rule %s-%s", rule.Description, rule.ID)
-				}
-			}
+	for _, rule := range rulesToDelete {
+		err := deleteRule(openstackClientFactory, rule.ID)
+
+		if err != nil {
+			if !openstackclient.IsNotFoundError(err) {
+				return fmt.Errorf("failed to delete security group rule %s (%s): %w", rule.Description, rule.ID, err)
+			} // else: already deleted
+		} else {
+			logger.Info("Unwanted security group rule deleted", "rule", rule.Description, "ruleID", rule.ID)
 		}
 	}
 
 	return nil
+}
+
+func rulesSymmetricDifference(wantedRules []rules.CreateOpts, currentRules []rules.SecGroupRule) ([]rules.CreateOpts, []rules.SecGroupRule) {
+	var rulesToDelete []rules.SecGroupRule
+	for _, currentRule := range currentRules {
+		found := false
+		for _, wantedRule := range wantedRules {
+			if ruleEqual(wantedRule, currentRule) {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			rulesToDelete = append(rulesToDelete, currentRule)
+		}
+	}
+
+	var rulesToAdd []rules.CreateOpts
+	for _, wantedRule := range wantedRules {
+		found := false
+		for _, currentRule := range currentRules {
+			if ruleEqual(wantedRule, currentRule) {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			rulesToAdd = append(rulesToAdd, wantedRule)
+		}
+	}
+
+	return rulesToAdd, rulesToDelete
+}
+
+func ruleEqual(a rules.CreateOpts, b rules.SecGroupRule) bool {
+	if !equality.Semantic.DeepEqual(string(a.Direction), b.Direction) {
+		return false
+	}
+
+	if !equality.Semantic.DeepEqual(a.Description, b.Description) {
+		return false
+	}
+
+	if !equality.Semantic.DeepEqual(string(a.EtherType), b.EtherType) {
+		return false
+	}
+
+	if !equality.Semantic.DeepEqual(a.SecGroupID, b.SecGroupID) {
+		return false
+	}
+
+	if !equality.Semantic.DeepEqual(a.PortRangeMin, b.PortRangeMin) || !equality.Semantic.DeepEqual(a.PortRangeMax, b.PortRangeMax) {
+		return false
+	}
+
+	if !equality.Semantic.DeepEqual(string(a.Protocol), b.Protocol) {
+		return false
+	}
+
+	if !equality.Semantic.DeepEqual(a.RemoteGroupID, b.RemoteGroupID) {
+		return false
+	}
+
+	if !equality.Semantic.DeepEqual(a.RemoteIPPrefix, b.RemoteIPPrefix) {
+		return false
+	}
+
+	return true
 }
 
 func createSecurityGroupRuleIfNotExist(openstackClientFactory openstackclient.Factory, createOpts rules.CreateOpts) error {
@@ -358,12 +413,12 @@ func createSecurityGroupRuleIfNotExist(openstackClientFactory openstackclient.Fa
 		}
 		return fmt.Errorf("failed to create Security Group rule %s: %w", createOpts.Description, err)
 	}
-	logger.Info("Security Group Rule created", "security group rule", createOpts.Description)
+	logger.Info("Security Group Rule created", "rule", createOpts.Description)
 	return nil
 }
 
 func ensureSecurityGroup(openstackClientFactory openstackclient.Factory, opt *Options) (groups.SecGroup, error) {
-	securityGroups, err := getSecurityGroupId(openstackClientFactory, opt.SecurityGroup)
+	securityGroups, err := getSecurityGroups(openstackClientFactory, opt.SecurityGroup)
 	if err != nil {
 		return groups.SecGroup{}, err
 	}

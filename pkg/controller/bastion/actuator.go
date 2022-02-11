@@ -19,9 +19,6 @@ import (
 	"fmt"
 
 	openstackclient "github.com/gardener/gardener-extension-provider-openstack/pkg/openstack/client"
-	"k8s.io/apimachinery/pkg/api/equality"
-	"k8s.io/apimachinery/pkg/util/sets"
-
 	"github.com/gardener/gardener/extensions/pkg/controller/bastion"
 	"github.com/go-logr/logr"
 	computefip "github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/floatingips"
@@ -181,7 +178,7 @@ func deleteSecurityGroup(openstackClientFactory openstackclient.Factory, groupid
 	return client.DeleteSecurityGroup(groupid)
 }
 
-func getSecurityGroupId(openstackClientFactory openstackclient.Factory, name string) ([]groups.SecGroup, error) {
+func getSecurityGroups(openstackClientFactory openstackclient.Factory, name string) ([]groups.SecGroup, error) {
 	client, err := openstackClientFactory.Networking()
 	if err != nil {
 		return nil, err
@@ -197,20 +194,16 @@ func createRules(openstackClientFactory openstackclient.Factory, createOpts rule
 	return client.CreateRule(createOpts)
 }
 
-func getRulesByName(openstackClientFactory openstackclient.Factory, name, secGroupID string) ([]rules.SecGroupRule, error) {
+func listRules(openstackClientFactory openstackclient.Factory, secGroupID string) ([]rules.SecGroupRule, error) {
 	client, err := openstackClientFactory.Networking()
 	if err != nil {
 		return nil, err
 	}
-	return client.GetRulesByName(name, secGroupID)
-}
 
-func getRulesBySecurityGroupID(openstackClientFactory openstackclient.Factory, secGroupID string) ([]rules.SecGroupRule, error) {
-	client, err := openstackClientFactory.Networking()
-	if err != nil {
-		return nil, err
+	listOpts := rules.ListOpts{
+		SecGroupID: secGroupID,
 	}
-	return client.GetRulesBySecurityGroupID(secGroupID)
+	return client.ListRules(listOpts)
 }
 
 func deleteRule(openstackClientFactory openstackclient.Factory, ruleID string) error {
@@ -219,31 +212,4 @@ func deleteRule(openstackClientFactory openstackclient.Factory, ruleID string) e
 		return err
 	}
 	return client.DeleteRule(ruleID)
-}
-
-func getIpRangeCidrs(ipRanges []IngressPermission) sets.String {
-	result := sets.NewString()
-	for _, ipRange := range ipRanges {
-		result.Insert(ipRange.CIDR)
-	}
-	return result
-}
-
-func ipPermissionsEqual(a rules.SecGroupRule, resourcedefine rules.CreateOpts, ipRangeCiders sets.String) bool {
-	// ports must match
-	if !equality.Semantic.DeepEqual(a.PortRangeMin, resourcedefine.PortRangeMax) || !equality.Semantic.DeepEqual(a.PortRangeMin, resourcedefine.PortRangeMin) {
-		return false
-	}
-
-	// protocol must match
-	if !equality.Semantic.DeepEqual(a.Protocol, resourcedefine.Protocol) {
-		return false
-	}
-
-	// RemoteIPPrefix must allow in the bastion ingress ranges
-	if !ipRangeCiders.Has(a.RemoteIPPrefix) {
-		return false
-	}
-
-	return false
 }

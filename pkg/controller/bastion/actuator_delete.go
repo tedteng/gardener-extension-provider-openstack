@@ -116,7 +116,7 @@ func removePublicIPAddress(logger logr.Logger, openstackClientFactory openstackc
 }
 
 func removeSecurityGroup(openstackClientFactory openstackclient.Factory, opt *Options) error {
-	bastionSecurityGroups, err := getSecurityGroupId(openstackClientFactory, opt.SecurityGroup)
+	bastionSecurityGroups, err := getSecurityGroups(openstackClientFactory, opt.SecurityGroup)
 	if err != nil {
 		return err
 	}
